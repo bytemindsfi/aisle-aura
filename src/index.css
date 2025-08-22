@@ -36,7 +36,19 @@ All colors MUST be HSL.
     --input: 214.3 31.8% 91.4%;
     --ring: 222.2 84% 4.9%;
 
-    --radius: 0.5rem;
+    --radius: 0.75rem;
+
+    /* Grocery app specific colors */
+    --success: 120 48% 53%;
+    --success-foreground: 0 0% 100%;
+    --warning: 45 93% 47%;
+    --warning-foreground: 222.2 84% 4.9%;
+    --info: 217 91% 60%;
+    --info-foreground: 0 0% 100%;
+    
+    /* App specific variables */
+    --content-max-width: 425px;
+    --list-item-height: 52px;
 
     --sidebar-background: 0 0% 98%;
 
