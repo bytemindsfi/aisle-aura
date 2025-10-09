@@ -1,4 +1,5 @@
 import { ShoppingCart } from "lucide-react";
+import logo from "../assets/logo.png";
 
 interface AuthLayoutProps {
   children: React.ReactNode;
@@ -11,7 +12,8 @@ const AuthLayout = ({ children }: AuthLayoutProps) => {
         <div className="text-center">
           <div className="flex justify-center mb-6">
             <div className="p-3 bg-muted rounded-full">
-              <ShoppingCart className="h-8 w-8 text-muted-foreground" />
+              {/*<ShoppingCart className="h-8 w-8 text-muted-foreground" />*/}
+                <img src={logo} alt="logo" className="h-8 w-8" />
             </div>
           </div>
           <h1 className="text-2xl font-bold text-foreground">Grocery List</h1>

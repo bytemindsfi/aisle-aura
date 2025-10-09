@@ -1,10 +1,9 @@
 import { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'app.lovable.e75aacafd2924d5cb13f0ae87e178e6d',
-  appName: 'aisle-aura',
+  appId: 'app.byteminds.aisleAura',
+  appName: 'Aisle-aura',
   webDir: 'dist',
-  bundledWebRuntime: false,
   server: {
     url: "https://e75aacaf-d292-4d5c-b13f-0ae87e178e6d.lovableproject.com?forceHideBadge=true",
     cleartext: true
