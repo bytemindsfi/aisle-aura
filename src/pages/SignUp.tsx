@@ -7,6 +7,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
 import AuthLayout from "@/components/AuthLayout";
 import { useToast } from "@/hooks/use-toast";
+import {useRegisterMutation} from "@/redux/aisle-aura.ts";
 
 const SignUp = () => {
   const [firstName, setFirstName] = useState("");
@@ -16,8 +17,9 @@ const SignUp = () => {
   const [agreeToTerms, setAgreeToTerms] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [register] = useRegisterMutation();
 
-  const handleSignUp = (e: React.FormEvent) => {
+  const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!agreeToTerms) {
       toast({
@@ -27,14 +29,39 @@ const SignUp = () => {
       });
       return;
     }
-    
-    // Simulate sign up
-    localStorage.setItem("isAuthenticated", "true");
-    toast({
-      title: "Welcome!",
-      description: "Your account has been created successfully.",
-    });
-    navigate("/lists");
+      if (!email){
+          toast({
+              title: "Email",
+              description: "Please fill your email address.",
+              variant: "destructive",
+          });
+          return;
+      }
+      if (!password) {
+          toast({
+              title: "Password",
+              description: "Please fill your Password",
+              variant: "destructive",
+          });
+          return;
+      }
+    try {
+        await register({email, password, firstName, lastName, agreeToTerms});
+        // Simulate sign up
+        localStorage.setItem("isAuthenticated", "true");
+        toast({
+            title: "Welcome!",
+            description: "Your account has been created successfully.",
+        });
+        navigate("/lists");
+    }catch (e) {
+          console.log("Error with registreation", e.message);
+        toast({
+            title: "Unknown error",
+            description: "Please try again later.",
+        });
+    }
+
   };
 
   const handleSocialLogin = (provider: string) => {
