@@ -7,7 +7,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
 import AuthLayout from "@/components/AuthLayout";
 import { useToast } from "@/hooks/use-toast";
-import {useRegisterMutation} from "@/redux/aisle-aura.ts";
+import { useRegisterMutation } from "@/redux/aisle-aura.ts";
 
 const SignUp = () => {
   const [firstName, setFirstName] = useState("");
@@ -29,39 +29,38 @@ const SignUp = () => {
       });
       return;
     }
-      if (!email){
-          toast({
-              title: "Email",
-              description: "Please fill your email address.",
-              variant: "destructive",
-          });
-          return;
-      }
-      if (!password) {
-          toast({
-              title: "Password",
-              description: "Please fill your Password",
-              variant: "destructive",
-          });
-          return;
-      }
-    try {
-        await register({email, password, firstName, lastName, agreeToTerms});
-        // Simulate sign up
-        localStorage.setItem("isAuthenticated", "true");
-        toast({
-            title: "Welcome!",
-            description: "Your account has been created successfully.",
-        });
-        navigate("/lists");
-    }catch (e) {
-          console.log("Error with registreation", e.message);
-        toast({
-            title: "Unknown error",
-            description: "Please try again later.",
-        });
+    if (!email) {
+      toast({
+        title: "Email",
+        description: "Please fill your email address.",
+        variant: "destructive",
+      });
+      return;
     }
-
+    if (!password) {
+      toast({
+        title: "Password",
+        description: "Please fill your Password",
+        variant: "destructive",
+      });
+      return;
+    }
+    try {
+      await register({ email, password, firstName, lastName, agreeToTerms });
+      // Simulate sign up
+      localStorage.setItem("isAuthenticated", "true");
+      toast({
+        title: "Welcome!",
+        description: "Your account has been created successfully.",
+      });
+      navigate("/lists");
+    } catch (e) {
+      console.log("Error with registreation", e.message);
+      toast({
+        title: "Unknown error",
+        description: "Please try again later.",
+      });
+    }
   };
 
   const handleSocialLogin = (provider: string) => {
@@ -75,8 +74,8 @@ const SignUp = () => {
     <AuthLayout>
       <div className="space-y-6">
         <div className="flex space-x-1 border-b border-border">
-          <Link 
-            to="/signin" 
+          <Link
+            to="/signin"
             className="flex-1 pb-2 text-center font-medium text-muted-foreground hover:text-foreground transition-colors"
           >
             Sign In
@@ -135,8 +134,8 @@ const SignUp = () => {
           </div>
 
           <div className="flex items-center space-x-2">
-            <Checkbox 
-              id="terms" 
+            <Checkbox
+              id="terms"
               checked={agreeToTerms}
               onCheckedChange={(checked) => setAgreeToTerms(checked as boolean)}
             />
@@ -145,7 +144,10 @@ const SignUp = () => {
             </Label>
           </div>
 
-          <Button type="submit" className="w-full bg-primary text-primary-foreground hover:bg-primary/90">
+          <Button
+            type="submit"
+            className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
+          >
             Create Account
           </Button>
         </form>
@@ -161,8 +163,8 @@ const SignUp = () => {
           </div>
 
           <div className="grid grid-cols-2 gap-3">
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={() => handleSocialLogin("Google")}
               className="w-full"
             >
@@ -186,13 +188,17 @@ const SignUp = () => {
               </svg>
               Google
             </Button>
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={() => handleSocialLogin("Facebook")}
               className="w-full"
             >
-              <svg className="mr-2 h-4 w-4 text-[#1877F2]" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+              <svg
+                className="mr-2 h-4 w-4 text-[#1877F2]"
+                fill="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
               </svg>
               Facebook
             </Button>

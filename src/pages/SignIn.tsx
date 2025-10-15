@@ -7,6 +7,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
 import AuthLayout from "@/components/AuthLayout";
 import { useToast } from "@/hooks/use-toast";
+import {useLoginMutation} from "@/redux/aisle-aura.ts";
 
 const SignIn = () => {
   const [email, setEmail] = useState("");
@@ -14,16 +15,28 @@ const SignIn = () => {
   const [rememberMe, setRememberMe] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [login] = useLoginMutation();
 
-  const handleSignIn = (e: React.FormEvent) => {
+  const handleSignIn =async (e: React.FormEvent) => {
     e.preventDefault();
-    // Simulate sign in
-    localStorage.setItem("isAuthenticated", "true");
-    toast({
-      title: "Welcome back!",
-      description: "You've been signed in successfully.",
-    });
-    navigate("/lists");
+    //TODO: do I really need this try catch thingy here? and in signup?
+    try {
+      await login({email, password});
+        // Simulate sign in
+        localStorage.setItem("isAuthenticated", "true");
+        toast({
+            title: "Welcome back!",
+            description: "You've been signed in successfully.",
+        });
+        navigate("/lists");
+    }catch (e) {
+        console.log("Error with Login", e.message);
+        toast({
+            title: "Unknown error",
+            description: "Please try again later.",
+        });
+    }
+
   };
 
   const handleSocialLogin = (provider: string) => {
@@ -40,8 +53,8 @@ const SignIn = () => {
           <button className="flex-1 pb-2 text-center font-medium text-foreground border-b-2 border-primary">
             Sign In
           </button>
-          <Link 
-            to="/signup" 
+          <Link
+            to="/signup"
             className="flex-1 pb-2 text-center font-medium text-muted-foreground hover:text-foreground transition-colors"
           >
             Sign Up
@@ -75,21 +88,30 @@ const SignIn = () => {
 
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
-              <Checkbox 
-                id="remember" 
+              <Checkbox
+                id="remember"
                 checked={rememberMe}
                 onCheckedChange={(checked) => setRememberMe(checked as boolean)}
               />
-              <Label htmlFor="remember" className="text-sm text-muted-foreground">
+              <Label
+                htmlFor="remember"
+                className="text-sm text-muted-foreground"
+              >
                 Remember me
               </Label>
             </div>
-            <Link to="/forgot-password" className="text-sm text-success hover:underline">
+            <Link
+              to="/forgot-password"
+              className="text-sm text-success hover:underline"
+            >
               Forgot password?
             </Link>
           </div>
 
-          <Button type="submit" className="w-full bg-primary text-primary-foreground hover:bg-primary/90">
+          <Button
+            type="submit"
+            className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
+          >
             Sign In
           </Button>
         </form>
@@ -105,8 +127,8 @@ const SignIn = () => {
           </div>
 
           <div className="grid grid-cols-2 gap-3">
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={() => handleSocialLogin("Google")}
               className="w-full"
             >
@@ -130,13 +152,17 @@ const SignIn = () => {
               </svg>
               Google
             </Button>
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={() => handleSocialLogin("Facebook")}
               className="w-full"
             >
-              <svg className="mr-2 h-4 w-4 text-[#1877F2]" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+              <svg
+                className="mr-2 h-4 w-4 text-[#1877F2]"
+                fill="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
               </svg>
               Facebook
             </Button>
