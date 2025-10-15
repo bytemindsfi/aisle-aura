@@ -45,7 +45,7 @@ All colors MUST be HSL.
     --warning-foreground: 222.2 84% 4.9%;
     --info: 217 91% 60%;
     --info-foreground: 0 0% 100%;
-    
+
     /* App specific variables */
     --content-max-width: 425px;
     --list-item-height: 52px;

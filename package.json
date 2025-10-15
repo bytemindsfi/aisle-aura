@@ -11,7 +11,8 @@
     "preview": "vite preview",
     "sync": "npx cap sync",
     "ios": "npx cap run ios",
-    "android": "npx cap run android"
+    "android": "npx cap run android",
+    "format": "prettier --write ./src"
   },
   "dependencies": {
     "@capacitor/android": "^7.4.3",
@@ -54,9 +55,11 @@
     "cmdk": "^1.1.1",
     "date-fns": "^3.6.0",
     "embla-carousel-react": "^8.6.0",
+    "eslint-config-prettier": "^10.1.8",
     "input-otp": "^1.4.2",
     "lucide-react": "^0.462.0",
     "next-themes": "^0.3.0",
+    "prettier": "^3.6.2",
     "react": "^18.3.1",
     "react-day-picker": "^8.10.1",
     "react-dom": "^18.3.1",

@@ -22,16 +22,22 @@ const App = () => (
           <Route path="/" element={<Navigate to="/lists" replace />} />
           <Route path="/signin" element={<SignIn />} />
           <Route path="/signup" element={<SignUp />} />
-          <Route path="/lists" element={
-            <ProtectedRoute>
-              <Lists />
-            </ProtectedRoute>
-          } />
-          <Route path="/lists/:id" element={
-            <ProtectedRoute>
-              <GroceryList />
-            </ProtectedRoute>
-          } />
+          <Route
+            path="/lists"
+            element={
+              <ProtectedRoute>
+                <Lists />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/lists/:id"
+            element={
+              <ProtectedRoute>
+                <GroceryList />
+              </ProtectedRoute>
+            }
+          />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
