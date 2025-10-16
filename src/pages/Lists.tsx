@@ -8,7 +8,6 @@ import { Progress } from "@/components/ui/progress";
 import { Search, Plus, Pin, Users } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth.tsx";
 import { useProfile } from "@/hooks/use-profile.ts";
-import { ListWithStats } from "@/types";
 import { useGetListWithStatsQuery } from "@/redux/aisle-aura.ts";
 import { Spinner } from "@/components/ui/Spinner.tsx";
 
@@ -18,10 +17,7 @@ const Lists = () => {
   const [activeTab, setActiveTab] = useState("all");
   const { user } = useAuth();
   const { profile } = useProfile(user?.id);
-
-  //const [lists] = useState<ListWithStats[]>([]);
-  const { data: lists, isLoading, error } = useGetListWithStatsQuery({});
-  console.log("lists", lists, isLoading);
+  const { data: lists, isLoading } = useGetListWithStatsQuery();
   if (isLoading) return <Spinner />;
 
   const tabs = [
@@ -105,7 +101,7 @@ const Lists = () => {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex-1 flex items-center justify-center space-x-1 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                className={`flex-1 flex items-center justify-center space-x-1 px-2 py-2 rounded-md text-sm font-medium transition-colors ${
                   activeTab === tab.id
                     ? "bg-background text-foreground shadow-sm"
                     : "text-muted-foreground hover:text-foreground"
@@ -148,7 +144,7 @@ const Lists = () => {
                       )}
                     </div>
                     <p className="text-sm text-muted-foreground">
-                      {list.updated_at}
+                      {new Date(list.updated_at).toLocaleString("en")}
                     </p>
                   </div>
                   <div className="text-right">
@@ -162,38 +158,49 @@ const Lists = () => {
                 <div className="mb-3">
                   <div className="space-y-1">
                     {list.first_items.map((item, index) => (
-                      <div key={index} className="flex items-center space-x-2">
+                      <>
                         <div
-                          className={`w-4 h-4 rounded border-2 flex items-center justify-center ${
-                            index < list.completed_items
-                              ? "bg-success border-success"
-                              : "border-muted-foreground"
-                          }`}
+                          key={index}
+                          className="flex items-center space-x-2"
                         >
-                          {index < list.completed_items && (
-                            <svg
-                              className="w-2.5 h-2.5 text-success-foreground"
-                              fill="currentColor"
-                              viewBox="0 0 20 20"
-                            >
-                              <path
-                                fillRule="evenodd"
-                                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                                clipRule="evenodd"
-                              />
-                            </svg>
-                          )}
+                          <div
+                            className={`w-4 h-4 rounded border-2 flex items-center justify-center ${
+                              index < list.completed_items
+                                ? "bg-success border-success"
+                                : "border-muted-foreground"
+                            }`}
+                          >
+                            {index < list.completed_items && (
+                              <svg
+                                className="w-2.5 h-2.5 text-success-foreground"
+                                fill="currentColor"
+                                viewBox="0 0 20 20"
+                              >
+                                <path
+                                  fillRule="evenodd"
+                                  d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                  clipRule="evenodd"
+                                />
+                              </svg>
+                            )}
+                          </div>
+                          <span
+                            className={`text-sm ${
+                              index < list.completed_items
+                                ? "line-through text-muted-foreground"
+                                : "text-foreground"
+                            }`}
+                          >
+                            {item}
+                          </span>
                         </div>
-                        <span
-                          className={`text-sm ${
-                            index < list.completed_items
-                              ? "line-through text-muted-foreground"
-                              : "text-foreground"
-                          }`}
-                        >
-                          {item}
-                        </span>
-                      </div>
+                        {list.first_items.length - 1 == index &&
+                        list.total_items - list.first_items.length !== 0 ? (
+                          <p className="text-sm text-muted-foreground">{`+ ${list.total_items - list.first_items.length} other items`}</p>
+                        ) : (
+                          <></>
+                        )}
+                      </>
                     ))}
                   </div>
                 </div>
