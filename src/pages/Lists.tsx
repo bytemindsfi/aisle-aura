@@ -6,82 +6,23 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Search, Plus, Pin, Users } from "lucide-react";
-import {useAuth} from "@/hooks/use-auth.tsx";
-import {useProfile} from "@/hooks/use-profile.ts";
-
-interface GroceryList {
-  id: string;
-  name: string;
-  updatedAt: string;
-  totalItems: number;
-  completedItems: number;
-  isPinned?: boolean;
-  isShared?: boolean;
-  items: string[];
-  status: "active" | "completed";
-}
+import { useAuth } from "@/hooks/use-auth.tsx";
+import { useProfile } from "@/hooks/use-profile.ts";
+import { ListWithStats } from "@/types";
+import { useGetListWithStatsQuery } from "@/redux/aisle-aura.ts";
+import { Spinner } from "@/components/ui/Spinner.tsx";
 
 const Lists = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("all");
-    const {user} = useAuth();
-    const { profile } = useProfile(user?.id)
+  const { user } = useAuth();
+  const { profile } = useProfile(user?.id);
 
-  const [lists] = useState<GroceryList[]>([
-    {
-      id: "1",
-      name: "Weekly Shopping",
-      updatedAt: "Updated 2 hours ago",
-      totalItems: 7,
-      completedItems: 1,
-      isPinned: true,
-      status: "active",
-      items: ["Milk", "Bread", "Eggs", "+4 more items"],
-    },
-    {
-      id: "2",
-      name: "Costco Run",
-      updatedAt: "Updated yesterday",
-      totalItems: 5,
-      completedItems: 2,
-      status: "active",
-      items: [
-        "Paper Towels",
-        "Toilet Paper",
-        "Chicken Breast",
-        "+2 more items",
-      ],
-    },
-    {
-      id: "3",
-      name: "Birthday Party",
-      updatedAt: "Created 3 days ago",
-      totalItems: 9,
-      completedItems: 0,
-      status: "active",
-      items: ["Cake Mix", "Candles", "Party Plates", "+6 more items"],
-    },
-    {
-      id: "4",
-      name: "Quick Groceries",
-      updatedAt: "Completed 5 days ago",
-      totalItems: 3,
-      completedItems: 3,
-      status: "completed",
-      items: ["Bananas", "Yogurt", "Orange Juice"],
-    },
-    {
-      id: "5",
-      name: "Family Shopping",
-      updatedAt: "Updated 1 hour ago",
-      totalItems: 3,
-      completedItems: 0,
-      isShared: true,
-      status: "active",
-      items: ["Cereal", "Snacks", "Fruit"],
-    },
-  ]);
+  //const [lists] = useState<ListWithStats[]>([]);
+  const { data: lists, isLoading, error } = useGetListWithStatsQuery({});
+  console.log("lists", lists, isLoading);
+  if (isLoading) return <Spinner />;
 
   const tabs = [
     { id: "all", label: "All Lists", count: lists.length },
@@ -98,7 +39,7 @@ const Lists = () => {
     {
       id: "shared",
       label: "Shared",
-      count: lists.filter((l) => l.isShared).length,
+      count: lists.filter((l) => l.is_shared).length,
     },
   ];
 
@@ -110,11 +51,11 @@ const Lists = () => {
       activeTab === "all" ||
       (activeTab === "active" && list.status === "active") ||
       (activeTab === "completed" && list.status === "completed") ||
-      (activeTab === "shared" && list.isShared);
+      (activeTab === "shared" && list.is_shared);
     return matchesSearch && matchesTab;
   });
 
-  const totalItems = lists.reduce((acc, list) => acc + list.totalItems, 0);
+  const total_items = lists.reduce((acc, list) => acc + list.total_items, 0);
   const activeLists = lists.filter((l) => l.status === "active").length;
 
   const getProgressPercentage = (completed: number, total: number) => {
@@ -132,9 +73,9 @@ const Lists = () => {
         <div className="p-4 space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-foreground">{`${profile ? profile.first_name+"'s" :'My'} Lists`}</h1>
+              <h1 className="text-2xl font-bold text-foreground">{`${profile ? profile.first_name + "'s" : "My"} Lists`}</h1>
               <p className="text-sm text-muted-foreground">
-                {activeLists} active lists • {totalItems} total items
+                {activeLists} active lists • {total_items} total items
               </p>
             </div>
             <Button
@@ -189,7 +130,7 @@ const Lists = () => {
               key={list.id}
               onClick={() => navigate(`/lists/${list.id}`)}
               className={`cursor-pointer transition-all hover:shadow-md ${
-                list.isPinned ? "ring-2 ring-warning/20 bg-warning/5" : ""
+                list.is_pinned ? "ring-2 ring-warning/20 bg-warning/5" : ""
               }`}
             >
               <CardContent className="p-4">
@@ -199,18 +140,20 @@ const Lists = () => {
                       <h3 className="font-semibold text-foreground">
                         {list.name}
                       </h3>
-                      {list.isPinned && (
+                      {list.is_pinned && (
                         <Pin className="h-4 w-4 text-warning fill-current" />
                       )}
-                      {list.isShared && <Users className="h-4 w-4 text-info" />}
+                      {list.is_shared && (
+                        <Users className="h-4 w-4 text-info" />
+                      )}
                     </div>
                     <p className="text-sm text-muted-foreground">
-                      {list.updatedAt}
+                      {list.updated_at}
                     </p>
                   </div>
                   <div className="text-right">
                     <p className="text-sm text-muted-foreground">
-                      {list.completedItems}/{list.totalItems}
+                      {list.completed_items}/{list.total_items}
                     </p>
                   </div>
                 </div>
@@ -218,16 +161,16 @@ const Lists = () => {
                 {/* Items Preview */}
                 <div className="mb-3">
                   <div className="space-y-1">
-                    {list.items.map((item, index) => (
+                    {list.first_items.map((item, index) => (
                       <div key={index} className="flex items-center space-x-2">
                         <div
                           className={`w-4 h-4 rounded border-2 flex items-center justify-center ${
-                            index < list.completedItems
+                            index < list.completed_items
                               ? "bg-success border-success"
                               : "border-muted-foreground"
                           }`}
                         >
-                          {index < list.completedItems && (
+                          {index < list.completed_items && (
                             <svg
                               className="w-2.5 h-2.5 text-success-foreground"
                               fill="currentColor"
@@ -243,7 +186,7 @@ const Lists = () => {
                         </div>
                         <span
                           className={`text-sm ${
-                            index < list.completedItems
+                            index < list.completed_items
                               ? "line-through text-muted-foreground"
                               : "text-foreground"
                           }`}
@@ -259,16 +202,16 @@ const Lists = () => {
                 <div className="space-y-2">
                   <Progress
                     value={getProgressPercentage(
-                      list.completedItems,
-                      list.totalItems,
+                      list.completed_items,
+                      list.total_items,
                     )}
                     className="h-2"
                   />
                   <div className="flex justify-between items-center">
                     <span className="text-xs text-muted-foreground">
                       {getProgressPercentage(
-                        list.completedItems,
-                        list.totalItems,
+                        list.completed_items,
+                        list.total_items,
                       )}
                       % complete
                     </span>
