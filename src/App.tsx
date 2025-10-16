@@ -9,6 +9,7 @@ import SignUp from "./pages/SignUp";
 import Lists from "./pages/Lists";
 import GroceryList from "./pages/GroceryList";
 import NotFound from "./pages/NotFound";
+import NewList from "@/pages/NewList.tsx";
 
 const queryClient = new QueryClient();
 
@@ -35,6 +36,14 @@ const App = () => (
             element={
               <ProtectedRoute>
                 <GroceryList />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/lists/new"
+            element={
+              <ProtectedRoute>
+                <NewList />
               </ProtectedRoute>
             }
           />

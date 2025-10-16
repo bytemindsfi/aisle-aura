@@ -20,23 +20,25 @@ export interface IProfile {
 }
 
 export interface List {
-  id: string;
-  user_id: string;
+  id?: string;
+  user_id?: string;
   name: string;
   is_pinned: boolean;
   is_shared: boolean;
   status: "active" | "archived" | "deleted" | "completed";
-  created_at: string;
-  updated_at: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface ListItem {
-  id: string;
-  list_id: string;
+  id?: string;
+  list_id?: string;
   name: string;
+    quantity: number ;       // Add this
+    category: string | null; // Add this
   is_completed: boolean;
-  created_at: string;
-  updated_at: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface ListWithStats extends List {
@@ -55,4 +57,8 @@ interface GroceryList {
   isShared?: boolean;
   items: string[];
   status: "active" | "completed";
+}
+
+export interface NewListInput extends List{
+    items: ListItem[];
 }
