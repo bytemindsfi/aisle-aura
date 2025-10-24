@@ -21,7 +21,7 @@ const Lists = () => {
   if (isLoading) return <Spinner />;
 
   const tabs = [
-    { id: "all", label: "All Lists", count: lists.length },
+    { id: "all", label: "All", count: lists.length },
     {
       id: "active",
       label: "Active",

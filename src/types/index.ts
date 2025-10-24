@@ -34,8 +34,8 @@ export interface ListItem {
   id?: string;
   list_id?: string;
   name: string;
-    quantity: number ;       // Add this
-    category: string | null; // Add this
+  quantity: number; // Add this
+  category: string | null; // Add this
   is_completed: boolean;
   created_at?: string;
   updated_at?: string;
@@ -47,7 +47,7 @@ export interface ListWithStats extends List {
   first_items: string[];
 }
 
-interface GroceryList {
+export interface ListDetail {
   id: string;
   name: string;
   updatedAt: string;
@@ -55,10 +55,10 @@ interface GroceryList {
   completedItems: number;
   isPinned?: boolean;
   isShared?: boolean;
-  items: string[];
-  status: "active" | "completed";
+  list_items: ListItem[];
+  status: "active" | "archived" | "deleted" | "completed";
 }
 
-export interface NewListInput extends List{
-    items: ListItem[];
+export interface NewListInput extends List {
+  items: ListItem[];
 }

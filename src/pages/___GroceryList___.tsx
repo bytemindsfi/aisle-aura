@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,52 +12,20 @@ import {
 } from "@/components/ui/select";
 import { ArrowLeft, X, Plus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import {useAddNewListMutation} from "@/redux/aisle-aura.ts";
-import {ListItem, NewListInput} from "@/types";
+import { useGetListByIdQuery } from "@/redux/aisle-aura.ts";
+import { Spinner } from "@/components/ui/Spinner.tsx";
+import { ListItem } from "@/types";
 
-const sampleList = [
-  {
-    id: "1",
-    name: "Bananas",
-    quantity: 6,
-    category: "Produce",
-    completed: false,
-  },
-  {
-    id: "2",
-    name: "Tomatoes",
-    quantity: 4,
-    category: "Produce",
-    completed: true,
-  },
-  {
-    id: "3",
-    name: "Lettuce",
-    quantity: 1,
-    category: "Produce",
-    completed: false,
-  },
-  { id: "4", name: "Milk", quantity: 1, category: "Dairy", completed: true },
-  {
-    id: "5",
-    name: "Greek Yogurt",
-    quantity: 2,
-    category: "Dairy",
-    completed: false,
-  },
-];
-
-const NewList = () => {
+const GroceryList = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const [listName, setListName] = useState("New List");
+  const [listName, setListName] = useState("Grocery List");
   const [newItemName, setNewItemName] = useState("");
   const [newItemQuantity, setNewItemQuantity] = useState("1");
   const [newItemCategory, setNewItemCategory] = useState("Produce");
 
   const [items, setItems] = useState<ListItem[]>([]);
-  const [addNewList] = useAddNewListMutation({});
 
   const categories = [
     "Produce",
@@ -106,6 +74,7 @@ const NewList = () => {
     if (!newItemName.trim()) return;
 
     const newItem: ListItem = {
+      id: Date.now().toString(),
       name: newItemName.trim(),
       quantity: parseInt(newItemQuantity) || 1,
       category: newItemCategory,
@@ -135,24 +104,6 @@ const NewList = () => {
     }
   };
 
-  const persistItems = async () => {
-      const _newList: NewListInput=  {
-          name: listName,
-          is_shared: false,
-          is_pinned: false,
-          status: "active",
-          items: items,
-      };
-      const {data, error} = await addNewList(_newList);
-      if (error) {
-          toast({
-              title: "We are unable to create your list at this time.",
-              description: `${listName} was not created, please try again.`,
-          });
-      }
-      if (data)navigate("/lists");
-  }
-
   return (
     <div className="min-h-screen bg-background">
       <div className="max-w-md mx-auto">
@@ -164,20 +115,15 @@ const NewList = () => {
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={persistItems}
+                  onClick={() => navigate("/lists")}
                   className="p-0 h-8 w-8"
                 >
                   <ArrowLeft className="h-4 w-4" />
                 </Button>
                 <div>
-                  <input
-                    placeholder={listName}
-                    value={listName}
-                    onChange={(evt) => setListName(evt.currentTarget.value)}
-                    type="text"
-                    maxLength={20}
-                    className="text-xl font-semibold text-foreground bg-transparent border-none appearance-none focus:outline-none"
-                  />
+                  <h1 className="text-xl font-bold text-foreground">
+                    {listName}
+                  </h1>
                   <p className="text-sm text-muted-foreground">
                     {totalItems} items • {completedItems} completed
                   </p>
@@ -339,4 +285,4 @@ const NewList = () => {
   );
 };
 
-export default NewList;
+export default GroceryList;

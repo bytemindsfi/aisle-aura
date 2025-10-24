@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,72 +10,97 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ArrowLeft, X, Plus } from "lucide-react";
+import { ArrowLeft, X, Plus, Delete } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-
-interface GroceryItem {
-  id: string;
-  name: string;
-  quantity: number;
-  category: string;
-  completed: boolean;
-}
+import {
+  useAddNewListMutation,
+  useGetListByIdQuery,
+  useAddItemToListMutation,
+  useToggleListItemMutation,
+  useDeleteListItemMutation,
+  useUpdateListNameMutation,
+  useDeleteListMutation,
+} from "@/redux/aisle-aura.ts";
+import { ListItem, NewListInput } from "@/types";
+import { Spinner } from "@/components/ui/Spinner.tsx";
 
 const GroceryList = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const [listName] = useState("Grocery List");
+  const isNewList = id === "new";
+
+  const [listName, setListName] = useState(isNewList ? "New List" : "");
   const [newItemName, setNewItemName] = useState("");
   const [newItemQuantity, setNewItemQuantity] = useState("1");
-  const [newItemCategory, setNewItemCategory] = useState("Produce");
+  const [newItemCategory, setNewItemCategory] = useState<string>("Produce");
 
-  const [items, setItems] = useState<GroceryItem[]>([
-    {
-      id: "1",
-      name: "Bananas",
-      quantity: 6,
-      category: "Produce",
-      completed: false,
-    },
-    {
-      id: "2",
-      name: "Tomatoes",
-      quantity: 4,
-      category: "Produce",
-      completed: true,
-    },
-    {
-      id: "3",
-      name: "Lettuce",
-      quantity: 1,
-      category: "Produce",
-      completed: false,
-    },
-    { id: "4", name: "Milk", quantity: 1, category: "Dairy", completed: true },
-    {
-      id: "5",
-      name: "Greek Yogurt",
-      quantity: 2,
-      category: "Dairy",
-      completed: false,
-    },
-  ]);
+  // For new lists only - store items locally until saved
+  const [localItems, setLocalItems] = useState<
+    Omit<ListItem, "id" | "list_id" | "created_at" | "updated_at">[]
+  >([]);
+
+  // Skip query if creating new list
+  const {
+    data: list,
+    isLoading,
+    error,
+  } = useGetListByIdQuery(id!, {
+    skip: isNewList,
+  });
+
+  const [addNewList, { isLoading: isCreating }] = useAddNewListMutation();
+  const [addItem, { isLoading: isAddingItem }] = useAddItemToListMutation();
+  const [toggleItem] = useToggleListItemMutation();
+  const [deleteItem] = useDeleteListItemMutation();
+  const [updateListName] = useUpdateListNameMutation(); // Need to create this
+  const [
+    deleteList,
+    { isLoading: isDeletingList, isSuccess: deletingIsSuccessful },
+  ] = useDeleteListMutation();
+
+  console.log("Here", localItems);
+
+  useEffect(() => {
+    if (list && !isNewList) {
+      setListName(list.name);
+    }
+  }, [list, isNewList]);
+
+  // Handle loading and error states
+  if (isLoading) return <Spinner />;
+
+  if (error && !isNewList) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-destructive mb-4">Failed to load list</p>
+          <Button onClick={() => navigate("/lists")}>Back to Lists</Button>
+        </div>
+      </div>
+    );
+  }
 
   const categories = [
     "Produce",
     "Dairy",
     "Meat",
-    "Pantry",
-    "Frozen",
+    "Bakery",
     "Beverages",
     "Snacks",
+    "Frozen",
+    "Pantry",
+    "Personal Care",
+    "Household",
     "Other",
   ];
 
+  // Use server items for existing lists, local items for new lists
+  const items = isNewList ? localItems : list?.list_items || [];
+
   const totalItems = items.length;
-  const completedItems = items.filter((item) => item.completed).length;
+  const completedItems = items.filter((item) => item.is_completed).length;
   const progressPercentage =
     totalItems > 0 ? Math.round((completedItems / totalItems) * 100) : 0;
 
@@ -87,57 +112,205 @@ const GroceryList = () => {
       }
       return acc;
     },
-    {} as Record<string, GroceryItem[]>,
+    {} as Record<string, ListItem[]>,
   );
 
-  const toggleItemCompleted = (itemId: string) => {
-    setItems(
-      items.map((item) =>
-        item.id === itemId ? { ...item, completed: !item.completed } : item,
-      ),
-    );
+  const handleToggleItem = async (itemId: string, currentStatus: boolean) => {
+    if (isNewList) {
+      // For new lists, toggle locally
+      setLocalItems(
+        localItems.map((item, index) =>
+          index.toString() === itemId
+            ? { ...item, is_completed: !currentStatus }
+            : item,
+        ),
+      );
+    } else {
+      // For existing lists, call mutation
+      try {
+        await toggleItem({ itemId, isCompleted: !currentStatus }).unwrap();
+        toast({
+          title: "Item updated",
+          description: "Item status has been updated.",
+        });
+      } catch (err) {
+        toast({
+          title: "Error",
+          description: "Failed to update item.",
+          variant: "destructive",
+        });
+      }
+    }
   };
 
-  const removeItem = (itemId: string) => {
-    setItems(items.filter((item) => item.id !== itemId));
-    toast({
-      title: "Item removed",
-      description: "The item has been removed from your list.",
-    });
+  const handleRemoveItem = async (itemId: string) => {
+    if (isNewList) {
+      // For new lists, remove locally
+      setLocalItems(
+        localItems.filter((_, index) => index.toString() !== itemId),
+      );
+      toast({
+        title: "Item removed",
+        description: "The item has been removed from your list.",
+      });
+    } else {
+      // For existing lists, call mutation
+      try {
+        await deleteItem(itemId).unwrap();
+        toast({
+          title: "Item removed",
+          description: "The item has been removed from your list.",
+        });
+      } catch (err) {
+        toast({
+          title: "Error",
+          description: "Failed to remove item.",
+          variant: "destructive",
+        });
+      }
+    }
   };
 
-  const addItem = () => {
+  const handleAddItem = async () => {
     if (!newItemName.trim()) return;
 
-    const newItem: GroceryItem = {
-      id: Date.now().toString(),
+    const newItem = {
       name: newItemName.trim(),
       quantity: parseInt(newItemQuantity) || 1,
       category: newItemCategory,
-      completed: false,
+      is_completed: false,
     };
 
-    setItems([...items, newItem]);
-    setNewItemName("");
-    setNewItemQuantity("1");
-    toast({
-      title: "Item added",
-      description: `${newItem.name} has been added to your list.`,
-    });
+    if (isNewList) {
+      // For new lists, add locally
+      setLocalItems([...localItems, newItem]);
+      setNewItemName("");
+      setNewItemQuantity("1");
+      toast({
+        title: "Item added",
+        description: `${newItem.name} has been added to your list.`,
+      });
+    } else {
+      // For existing lists, call mutation
+      try {
+        await addItem({
+          listId: id!,
+          name: newItem.name,
+          quantity: newItem.quantity,
+          category: newItem.category,
+        }).unwrap();
+        setNewItemName("");
+        setNewItemQuantity("1");
+        toast({
+          title: "Item added",
+          description: `${newItem.name} has been added to your list.`,
+        });
+      } catch (err) {
+        toast({
+          title: "Error",
+          description: "Failed to add item.",
+          variant: "destructive",
+        });
+      }
+    }
   };
 
-  const clearCompleted = () => {
-    setItems(items.filter((item) => !item.completed));
-    toast({
-      title: "Completed items cleared",
-      description: "All completed items have been removed.",
-    });
+  const handleClearCompleted = async () => {
+    if (isNewList) {
+      setLocalItems(localItems.filter((item) => !item.is_completed));
+      toast({
+        title: "Completed items cleared",
+        description: "All completed items have been removed.",
+      });
+    } else {
+      // Delete all completed items
+      const completedItemIds = items
+        .filter((item) => item.is_completed)
+        .map((item) => item.id);
+
+      try {
+        await Promise.all(
+          completedItemIds.map((itemId) => deleteItem(itemId).unwrap()),
+        );
+        toast({
+          title: "Completed items cleared",
+          description: "All completed items have been removed.",
+        });
+      } catch (err) {
+        toast({
+          title: "Error",
+          description: "Failed to clear completed items.",
+          variant: "destructive",
+        });
+      }
+    }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === "Enter") {
-      addItem();
+      handleAddItem();
     }
+  };
+
+  const handleSave = async () => {
+    if (isNewList) {
+      // Create new list
+      if (!listName.trim()) {
+        toast({
+          title: "Error",
+          description: "Please enter a list name.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      try {
+        const newList: NewListInput = {
+          name: listName.trim(),
+          is_shared: false,
+          is_pinned: false,
+          items: localItems, // Just names for create
+        };
+
+        await addNewList(newList).unwrap();
+
+        toast({
+          title: "List created",
+          description: `${listName} has been created successfully.`,
+        });
+        navigate("/lists");
+      } catch (err) {
+        console.log(err.message);
+        toast({
+          title: "Error",
+          description: "Failed to create list. Please try again.",
+          variant: "destructive",
+        });
+      }
+    } else {
+      // Update existing list name if changed
+      if (listName.trim() && listName !== list?.name) {
+        try {
+          await updateListName({ listId: id!, name: listName.trim() }).unwrap();
+          toast({
+            title: "List updated",
+            description: "List name has been updated.",
+          });
+        } catch (err) {
+          toast({
+            title: "Error",
+            description: "Failed to update list name.",
+            variant: "destructive",
+          });
+        }
+      }
+      navigate("/lists");
+    }
+  };
+
+  const handleDeleteList = () => {
+    deleteList(list.id);
+    setTimeout(() => navigate("/lists"), 5000);
   };
 
   return (
@@ -151,15 +324,21 @@ const GroceryList = () => {
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => navigate("/lists")}
+                  onClick={handleSave}
                   className="p-0 h-8 w-8"
+                  disabled={isCreating}
                 >
                   <ArrowLeft className="h-4 w-4" />
                 </Button>
                 <div>
-                  <h1 className="text-xl font-bold text-foreground">
-                    {listName}
-                  </h1>
+                  <input
+                    placeholder="List name"
+                    value={listName}
+                    onChange={(evt) => setListName(evt.currentTarget.value)}
+                    type="text"
+                    maxLength={50}
+                    className="text-xl font-semibold text-foreground bg-transparent border-none appearance-none focus:outline-none"
+                  />
                   <p className="text-sm text-muted-foreground">
                     {totalItems} items • {completedItems} completed
                   </p>
@@ -203,12 +382,12 @@ const GroceryList = () => {
               </div>
 
               <Button
-                onClick={addItem}
+                onClick={handleAddItem}
                 className="w-full"
-                disabled={!newItemName.trim()}
+                disabled={!newItemName.trim() || isAddingItem}
               >
                 <Plus className="h-4 w-4 mr-2" />
-                Add Item
+                {isAddingItem ? "Adding..." : "Add Item"}
               </Button>
             </div>
 
@@ -223,7 +402,7 @@ const GroceryList = () => {
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={clearCompleted}
+                    onClick={handleClearCompleted}
                     className="text-muted-foreground hover:text-foreground"
                   >
                     Clear completed
@@ -242,60 +421,67 @@ const GroceryList = () => {
                 {category}
               </h2>
               <div className="space-y-2">
-                {categoryItems.map((item) => (
-                  <div
-                    key={item.id}
-                    className="flex items-center space-x-3 p-3 rounded-lg border border-border bg-card hover:bg-accent/50 transition-colors"
-                  >
-                    <button
-                      onClick={() => toggleItemCompleted(item.id)}
-                      className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
-                        item.completed
-                          ? "bg-success border-success"
-                          : "border-muted-foreground hover:border-success"
-                      }`}
-                    >
-                      {item.completed && (
-                        <svg
-                          className="w-3 h-3 text-success-foreground"
-                          fill="currentColor"
-                          viewBox="0 0 20 20"
-                        >
-                          <path
-                            fillRule="evenodd"
-                            d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                            clipRule="evenodd"
-                          />
-                        </svg>
-                      )}
-                    </button>
+                {categoryItems.map((item, index) => {
+                  // Use index as key for new lists, id for existing
+                  const itemKey = isNewList ? index.toString() : item.id;
 
-                    <div className="flex-1">
-                      <span
-                        className={`font-medium ${
-                          item.completed
-                            ? "line-through text-muted-foreground"
-                            : "text-foreground"
+                  return (
+                    <div
+                      key={itemKey}
+                      className="flex items-center space-x-3 p-3 rounded-lg border border-border bg-card hover:bg-accent/50 transition-colors"
+                    >
+                      <button
+                        onClick={() =>
+                          handleToggleItem(itemKey, item.is_completed)
+                        }
+                        className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
+                          item.is_completed
+                            ? "bg-success border-success"
+                            : "border-muted-foreground hover:border-success"
                         }`}
                       >
-                        {item.name}
+                        {item.is_completed && (
+                          <svg
+                            className="w-3 h-3 text-success-foreground"
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                              clipRule="evenodd"
+                            />
+                          </svg>
+                        )}
+                      </button>
+
+                      <div className="flex-1">
+                        <span
+                          className={`font-medium ${
+                            item.is_completed
+                              ? "line-through text-muted-foreground"
+                              : "text-foreground"
+                          }`}
+                        >
+                          {item.name}
+                        </span>
+                      </div>
+
+                      <span className="text-sm text-muted-foreground min-w-[20px] text-center">
+                        {item.quantity}
                       </span>
+
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleRemoveItem(itemKey)}
+                        className="p-1 h-8 w-8 text-muted-foreground hover:text-destructive"
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
                     </div>
-
-                    <span className="text-sm text-muted-foreground min-w-[20px] text-center">
-                      {item.quantity}
-                    </span>
-
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => removeItem(item.id)}
-                      className="p-1 h-8 w-8 text-muted-foreground hover:text-destructive"
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           ))}
@@ -315,6 +501,18 @@ const GroceryList = () => {
               </p>
             </div>
           )}
+          {
+            <div className="text-center py-12">
+              <Button
+                onClick={handleDeleteList}
+                className="w-full bg-red-600"
+                /*disabled={!newItemName.trim() || isAddingItem}*/
+              >
+                <Delete className="h-4 w-4 mr-2" />
+                {isAddingItem ? "Deleting..." : "Delete list"}
+              </Button>
+            </div>
+          }
         </div>
       </div>
     </div>
