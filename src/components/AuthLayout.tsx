@@ -13,11 +13,13 @@ const AuthLayout = ({ children }: AuthLayoutProps) => {
           <div className="flex justify-center mb-6">
             <div className="p-3 bg-muted rounded-full">
               {/*<ShoppingCart className="h-8 w-8 text-muted-foreground" />*/}
-                <img src={logo} alt="logo" className="h-8 w-8" />
+              <img src={logo} alt="logo" className="h-8 w-8" />
             </div>
           </div>
           <h1 className="text-2xl font-bold text-foreground">Grocery List</h1>
-          <p className="text-muted-foreground mt-2">Simple shopping, organized life</p>
+          <p className="text-muted-foreground mt-2">
+            Simple shopping, organized life
+          </p>
         </div>
         {children}
       </div>

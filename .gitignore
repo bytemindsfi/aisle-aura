@@ -28,3 +28,5 @@ ios/
 android/
 pnpm-workspace.yaml
 pnpm-lock.yaml
+.env
+.env

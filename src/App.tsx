@@ -7,7 +7,7 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import SignIn from "./pages/SignIn";
 import SignUp from "./pages/SignUp";
 import Lists from "./pages/Lists";
-import GroceryList from "./pages/GroceryList";
+import GroceryList from "./pages/GroceryList.tsx";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -22,16 +22,30 @@ const App = () => (
           <Route path="/" element={<Navigate to="/lists" replace />} />
           <Route path="/signin" element={<SignIn />} />
           <Route path="/signup" element={<SignUp />} />
-          <Route path="/lists" element={
-            <ProtectedRoute>
-              <Lists />
-            </ProtectedRoute>
-          } />
-          <Route path="/lists/:id" element={
-            <ProtectedRoute>
-              <GroceryList />
-            </ProtectedRoute>
-          } />
+          <Route
+            path="/lists"
+            element={
+              <ProtectedRoute>
+                <Lists />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/lists/:id"
+            element={
+              <ProtectedRoute>
+                <GroceryList />
+              </ProtectedRoute>
+            }
+          />
+          {/*<Route
+            path="/lists/new"
+            element={
+              <ProtectedRoute>
+                <NewList />
+              </ProtectedRoute>
+            }
+          />*/}
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
