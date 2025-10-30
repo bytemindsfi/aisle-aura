@@ -12,7 +12,12 @@
     "sync": "npx cap sync",
     "ios": "npx cap run ios",
     "android": "npx cap run android",
-    "format": "prettier --write ./src"
+    "format": "prettier --write ./src",
+    "copy-ios": "npx cap copy ios",
+    "copy-android": "npx cap copy android",
+    "update-ios": "npx cap update ios",
+    "update-android": "npx cap update android",
+    "open-xcode": "npx cap open ios"
   },
   "dependencies": {
     "@capacitor/android": "^7.4.3",
@@ -68,6 +73,7 @@
     "react-resizable-panels": "^2.1.9",
     "react-router-dom": "^6.30.1",
     "recharts": "^2.15.4",
+    "sharp": "^0.34.4",
     "sonner": "^1.7.4",
     "tailwind-merge": "^2.6.0",
     "tailwindcss-animate": "^1.0.7",
@@ -75,6 +81,7 @@
     "zod": "^3.25.76"
   },
   "devDependencies": {
+    "@capacitor/assets": "^3.0.5",
     "@eslint/js": "^9.37.0",
     "@tailwindcss/typography": "^0.5.19",
     "@types/node": "^22.18.8",
