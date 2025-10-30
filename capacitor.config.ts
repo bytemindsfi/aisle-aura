@@ -8,6 +8,9 @@ const config: CapacitorConfig = {
     url: "http://192.168.101.108:8080",
     cleartext: true
   }*/,
+    ios: {
+        contentInset: 'automatic' // Handles safe areas automatically
+    },
   plugins: {
     SplashScreen: {
       launchShowDuration: 2000,

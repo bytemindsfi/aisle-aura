@@ -18,7 +18,7 @@ const Lists = () => {
   const { user } = useAuth();
   const { profile } = useProfile(user?.id);
   const { data: lists, isLoading } = useGetListWithStatsQuery();
-  if (isLoading) return <Spinner />;
+  if (isLoading) return <Spinner fullscreen={true}/>;
 
   const tabs = [
     { id: "all", label: "All", count: lists.length },

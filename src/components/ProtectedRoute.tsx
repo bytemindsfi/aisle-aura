@@ -19,7 +19,9 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
 
   return (
     <>
-      <div className="h-fit max-w-md mx-auto flex justify-between px-4 pt-4">
+      <div className="h-fit max-w-md mx-auto flex justify-between px-4 pt-4" style={{
+          paddingTop: 'max(1rem, env(safe-area-inset-top))'
+      }}>
         <div className="w-fit text-muted-foreground flex gap-1">
           <UserCircle className="h-6 w-6" />
           <p>{profile ? profile.first_name : null}</p>
