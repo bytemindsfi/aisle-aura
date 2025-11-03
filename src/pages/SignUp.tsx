@@ -45,22 +45,28 @@ const SignUp = () => {
       });
       return;
     }
-      const {data, error} = await register({ email, password, firstName, lastName, agreeToTerms });
-      if (error){
-          console.log("Error with registration", error);
-          toast({
-              title: "Unknown error",
-              description: "Please try again later.",
-          });
-          return;
-      }
-      if (data){
-          toast({
-              title: "Welcome!",
-              description: "Your account has been created successfully.",
-          });
-          navigate("/lists");
-      }
+    const { data, error } = await register({
+      email,
+      password,
+      firstName,
+      lastName,
+      agreeToTerms,
+    });
+    if (error) {
+      console.log("Error with registration", error);
+      toast({
+        title: "Unknown error",
+        description: "Please try again later.",
+      });
+      return;
+    }
+    if (data) {
+      toast({
+        title: "Welcome!",
+        description: "Your account has been created successfully.",
+      });
+      navigate("/lists");
+    }
   };
 
   const handleSocialLogin = (provider: string) => {

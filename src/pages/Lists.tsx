@@ -19,8 +19,8 @@ const Lists = () => {
   const { profile } = useProfile(user?.id);
   const { data: lists, isLoading, isError } = useGetListWithStatsQuery();
   if (isLoading) return <Spinner fullscreen={true} />;
-    if (isError) return <Spinner fullscreen={true} />;
-    console.log("Lists", lists, isLoading, isError);
+  if (isError) return <Spinner fullscreen={true} />;
+  console.log("Lists", lists, isLoading, isError);
   const tabs = [
     { id: "all", label: "All", count: lists.length },
     {
@@ -97,28 +97,28 @@ const Lists = () => {
           </div>
 
           {/* Tabs */}
-            <div className="w-full flex gap-0.5 bg-muted p-1 rounded-lg">
-                {tabs.map((tab) => (
-                    <button
-                        key={tab.id}
-                        onClick={() => setActiveTab(tab.id)}
-                        className={`flex-1 flex flex-col items-center justify-center py-1.5 rounded-md text-[12px] 
+          <div className="w-full flex gap-0.5 bg-muted p-1 rounded-lg">
+            {tabs.map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex-1 flex flex-col items-center justify-center py-1.5 rounded-md text-[12px] 
                         sm:text-xs font-medium transition-colors ${
-                            activeTab === tab.id
-                                ? "bg-background text-foreground shadow-sm"
-                                : "text-muted-foreground hover:text-foreground"
+                          activeTab === tab.id
+                            ? "bg-background text-foreground shadow-sm"
+                            : "text-muted-foreground hover:text-foreground"
                         }`}
-                    >
-                        <span className="leading-tight">{tab.label}</span>
-                        <Badge
-                            variant="secondary"
-                            className="mt-0.5 h-3.5 min-w-[16px] px-1 text-[12px] leading-none"
-                        >
-                            {tab.count}
-                        </Badge>
-                    </button>
-                ))}
-            </div>
+              >
+                <span className="leading-tight">{tab.label}</span>
+                <Badge
+                  variant="secondary"
+                  className="mt-0.5 h-3.5 min-w-[16px] px-1 text-[12px] leading-none"
+                >
+                  {tab.count}
+                </Badge>
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* Lists Grid */}

@@ -2,7 +2,7 @@ import { createApi } from "@reduxjs/toolkit/query/react";
 import {
   ILoginUser,
   INewUser,
-  ListDetail,
+  List,
   ListWithStats,
   NewListInput,
 } from "@/types";
@@ -18,30 +18,33 @@ const supabaseBaseQuery = async ({
   single = false, // For .single()
 }: any) => {
   try {
-      // Step 1: Check for valid session before making request
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    // Step 1: Check for valid session before making request
+    const {
+      data: { session },
+      error: sessionError,
+    } = await supabase.auth.getSession();
 
-      if (sessionError || !session) {
-          return {
-              error: {
-                  status: 'UNAUTHENTICATED',
-                  error: 'No active session. Please sign in again.',
-              },
-          };
+    if (sessionError || !session) {
+      return {
+        error: {
+          status: "UNAUTHENTICATED",
+          error: "No active session. Please sign in again.",
+        },
+      };
+    }
+
+    // Step 2: Check if token is about to expire (optional, but good practice)
+    const expiresAt = session.expires_at;
+    const now = Math.floor(Date.now() / 1000);
+
+    // If token expires in less than 5 minutes, refresh it
+    if (expiresAt && expiresAt - now < 300) {
+      const { error: refreshError } = await supabase.auth.refreshSession();
+      if (refreshError) {
+        console.warn("Token refresh failed:", refreshError);
+        // Don't fail the request, let it try with current token
       }
-
-      // Step 2: Check if token is about to expire (optional, but good practice)
-      const expiresAt = session.expires_at;
-      const now = Math.floor(Date.now() / 1000);
-
-      // If token expires in less than 5 minutes, refresh it
-      if (expiresAt && expiresAt - now < 300) {
-          const { error: refreshError } = await supabase.auth.refreshSession();
-          if (refreshError) {
-              console.warn('Token refresh failed:', refreshError);
-              // Don't fail the request, let it try with current token
-          }
-      }
+    }
 
     let query: any;
 
@@ -89,16 +92,16 @@ const supabaseBaseQuery = async ({
 
     return { data };
   } catch (e: any) {
-      console.log('ERROR FETCHING', e.message);
-      // Check if it's a network error or auth error
-      if (e.message?.includes('JWT') || e.message?.includes('auth')) {
-          return {
-              error: {
-                  status: 'UNAUTHENTICATED',
-                  error: 'Authentication error. Please sign in again.',
-              },
-          };
-      }
+    console.log("ERROR FETCHING", e.message);
+    // Check if it's a network error or auth error
+    if (e.message?.includes("JWT") || e.message?.includes("auth")) {
+      return {
+        error: {
+          status: "UNAUTHENTICATED",
+          error: "Authentication error. Please sign in again.",
+        },
+      };
+    }
     return { error: { status: "FETCH_ERROR", error: e.message } };
   }
 };
@@ -128,7 +131,7 @@ export const aisleAuraApi = createApi({
             if (userRegError) throw new Error(userRegError.message);
             return { data: registeredUser };
           } catch (e) {
-            return {error: e.message};
+            return { error: e.message };
           }
         },
         invalidatesTags: ["user"],
@@ -146,7 +149,7 @@ export const aisleAuraApi = createApi({
             }
             return { data };
           } catch (e) {
-            return {error: e.message};
+            return { error: e.message };
           }
         },
         invalidatesTags: ["user"],
@@ -255,7 +258,7 @@ export const aisleAuraApi = createApi({
         },
         invalidatesTags: ["list"],
       }),
-      getListById: builder.query<ListDetail, string>({
+      getListById: builder.query<List, string>({
         queryFn: async (listId) => {
           try {
             // Get current user to verify ownership
@@ -406,7 +409,7 @@ export const aisleAuraApi = createApi({
             return { error: { status: "FETCH_ERROR", error: e.message } };
           }
         },
-        invalidatesTags: ["List"], // Refetch all lists after deletion
+        invalidatesTags: ["list"], // Refetch all lists after deletion
       }),
     };
   },

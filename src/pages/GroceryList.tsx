@@ -10,7 +10,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {ArrowLeft, X, Plus, Pin, Share, Trash2} from "lucide-react";
+import {
+  ArrowLeft,
+  X,
+  Plus,
+  Pin,
+  Share,
+  Trash2,
+  Share2,
+  Archive,
+} from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import {
   useAddNewListMutation,
@@ -23,6 +32,8 @@ import {
 } from "@/redux/aisle-aura.ts";
 import { ListItem, NewListInput } from "@/types";
 import { Spinner } from "@/components/ui/Spinner.tsx";
+import { cn } from "@/lib/utils.ts";
+import PullToRefresh from "react-simple-pull-to-refresh";
 
 const GroceryList = () => {
   const { id } = useParams();
@@ -60,6 +71,9 @@ const GroceryList = () => {
     { isLoading: isDeletingList, isSuccess: deletingIsSuccessful },
   ] = useDeleteListMutation();
 
+  const [isPinned, setIsPinned] = useState(list ? list.is_pinned : false);
+  const [isArchived, setIsArchived] = useState(false);
+
   console.log("Here", localItems);
 
   useEffect(() => {
@@ -69,7 +83,7 @@ const GroceryList = () => {
   }, [list, isNewList]);
 
   // Handle loading and error states
-  if (isLoading) return <Spinner fullscreen={true}/>;
+  if (isLoading) return <Spinner fullscreen={true} />;
 
   if (error && !isNewList) {
     return (
@@ -97,7 +111,8 @@ const GroceryList = () => {
   ];
 
   // Use server items for existing lists, local items for new lists
-  const items = isNewList ? localItems : list?.list_items || [];
+  // @ts-ignore
+    const items = isNewList ? localItems : list?.list_items || [];
 
   const totalItems = items.length;
   const completedItems = items.filter((item) => item.is_completed).length;
@@ -313,223 +328,268 @@ const GroceryList = () => {
     setTimeout(() => navigate("/lists"), 5000);
   };
 
+  const handlePin = () => setIsPinned(!isPinned);
+  const handleArchive = () => setIsArchived(!isArchived);
+  const handleShare = () => {
+    // Share logic
+  };
+
+  // Pull to refresh handler
+  const handleRefresh = async () => {
+    console.log("Refreshing");
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <div className="max-w-md mx-auto">
-        {/* Header */}
-        <div className="sticky top-0 bg-background border-b border-border z-10">
-          <div className="p-4">
-            <div className="w-full grid grid-cols-[20%_auto_30%] items-center justify-between mb-4">
-              <div className="flex items-center space-x-2">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleSave}
-                  className="p-0 h-8 w-8"
-                  disabled={isCreating}
-                >
-                  <ArrowLeft className="h-4 w-4" />
-                </Button>
-                <div>
-                  <input
-                    placeholder="List name"
-                    value={listName}
-                    onChange={(evt) => setListName(evt.currentTarget.value)}
-                    type="text"
-                    maxLength={50}
-                    className="text-xl font-semibold text-foreground bg-transparent border-none appearance-none focus:outline-none"
-                  />
-                  <p className="text-sm text-muted-foreground">
-                    {totalItems} items • {completedItems} completed
-                  </p>
-                </div>
-                <div className="flex items-center space-x-4">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={handleSave}
-                    className="p-0 h-fit w-fit"
-                    disabled={isCreating}
-                  >
-                    <Pin className={`h-24 w-24 fill-current ${list.isPinned === true ? 'text-warning' : 'text-gray-500'}`} />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={handleSave}
-                    className="p-0 h-fit w-fit"
-                    disabled={isCreating}
-                  >
-                    <Share className="h-24 w-24 fill-current text-gray-500" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={handleDeleteList}
-                    className="p-0 h-fit w-fit"
-                  >
-                    <Trash2 className="h-24 w-24 fill-current text-red-600"/>
-                  </Button>
-                </div>
-              </div>
-            </div>
-
-            {/* Add Item Form */}
-            <div className="space-y-3">
-              <div className="flex space-x-2">
-                <Input
-                  placeholder="Add item..."
-                  value={newItemName}
-                  onChange={(e) => setNewItemName(e.target.value)}
-                  onKeyPress={handleKeyPress}
-                  className="flex-1"
-                />
-                <Input
-                  type="number"
-                  min="1"
-                  max="99"
-                  value={newItemQuantity}
-                  onChange={(e) => setNewItemQuantity(e.target.value)}
-                  className="w-16"
-                />
-                <Select
-                  value={newItemCategory}
-                  onValueChange={setNewItemCategory}
-                >
-                  <SelectTrigger className="w-28">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {categories.map((category) => (
-                      <SelectItem key={category} value={category}>
-                        {category}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <Button
-                onClick={handleAddItem}
-                className="w-full"
-                disabled={!newItemName.trim() || isAddingItem}
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                {isAddingItem ? "Adding..." : "Add Item"}
-              </Button>
-            </div>
-
-            {/* Progress */}
-            <div className="mt-4 space-y-2">
-              <Progress value={progressPercentage} className="h-2" />
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-success font-medium">
-                  {progressPercentage}% complete
-                </span>
-                {completedItems > 0 && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={handleClearCompleted}
-                    className="text-muted-foreground hover:text-foreground"
-                  >
-                    Clear completed
-                  </Button>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Items List */}
-        <div className="p-4 space-y-6">
-          {Object.entries(groupedItems).map(([category, categoryItems]) => (
-            <div key={category}>
-              <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wide mb-3">
-                {category}
-              </h2>
-              <div className="space-y-2">
-                {categoryItems.map((item, index) => {
-                  // Use index as key for new lists, id for existing
-                  const itemKey = isNewList ? index.toString() : item.id;
-
-                  return (
-                    <div
-                      key={itemKey}
-                      className="flex items-center space-x-3 p-3 rounded-lg border border-border bg-card hover:bg-accent/50 transition-colors"
+        <PullToRefresh
+          onRefresh={handleRefresh}
+          pullingContent=""
+          refreshingContent={<Spinner />}
+          pullDownThreshold={80}
+          maxPullDownDistance={100}
+          resistance={2}
+        >
+          <div>
+            {/* Header */}
+            <div className="sticky top-0 bg-background border-b border-border z-10">
+              <div className="p-4">
+                <div className="w-full flex items-center justify-between mb-4">
+                  <div className="flex items-center space-x-2">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleSave}
+                      className="p-0 h-8 w-8"
+                      disabled={isCreating}
                     >
-                      <button
-                        onClick={() =>
-                          handleToggleItem(itemKey, item.is_completed)
-                        }
-                        className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
-                          item.is_completed
-                            ? "bg-success border-success"
-                            : "border-muted-foreground hover:border-success"
-                        }`}
-                      >
-                        {item.is_completed && (
-                          <svg
-                            className="w-3 h-3 text-success-foreground"
-                            fill="currentColor"
-                            viewBox="0 0 20 20"
-                          >
-                            <path
-                              fillRule="evenodd"
-                              d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                              clipRule="evenodd"
-                            />
-                          </svg>
-                        )}
-                      </button>
+                      <ArrowLeft className="h-4 w-4" />
+                    </Button>
+                    <div>
+                      <input
+                        placeholder="List name"
+                        value={listName}
+                        onChange={(evt) => setListName(evt.currentTarget.value)}
+                        type="text"
+                        maxLength={50}
+                        className="text-xl font-semibold text-foreground bg-transparent border-none appearance-none focus:outline-none"
+                      />
+                      <p className="text-sm text-muted-foreground">
+                        {totalItems} items • {completedItems} completed
+                      </p>
+                    </div>
+                  </div>
+                </div>
 
-                      <div className="flex-1">
-                        <span
-                          className={`font-medium ${
-                            item.is_completed
-                              ? "line-through text-muted-foreground"
-                              : "text-foreground"
-                          }`}
-                        >
-                          {item.name}
-                        </span>
-                      </div>
+                {/* Action Bar - The New Design */}
+                <div className="flex items-center justify-around px-4 py-2 mb-4 bg-muted/30">
+                  <button
+                    onClick={handlePin}
+                    className={cn(
+                      "flex flex-col items-center gap-1 p-2 rounded-lg transition-colors min-w-[60px]",
+                      isPinned
+                        ? "text-warning"
+                        : "text-muted-foreground hover:text-foreground hover:bg-muted/50",
+                    )}
+                  >
+                    <Pin
+                      className={cn("h-5 w-5", isPinned && "fill-current")}
+                    />
+                    <span className="text-[10px] font-medium">
+                      {isPinned ? "Pinned" : "Pin"}
+                    </span>
+                  </button>
 
-                      <span className="text-sm text-muted-foreground min-w-[20px] text-center">
-                        {item.quantity}
-                      </span>
+                  <button
+                    onClick={handleShare}
+                    className="flex flex-col items-center gap-1 p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors min-w-[60px]"
+                  >
+                    <Share2 className="h-5 w-5" />
+                    <span className="text-[10px] font-medium">Share</span>
+                  </button>
 
+                  <button
+                    onClick={handleArchive}
+                    className={cn(
+                      "flex flex-col items-center gap-1 p-2 rounded-lg transition-colors min-w-[60px]",
+                      isArchived
+                        ? "text-blue-600"
+                        : "text-muted-foreground hover:text-foreground hover:bg-muted/50",
+                    )}
+                  >
+                    <Archive className="h-5 w-5" />
+                    <span className="text-[10px] font-medium">
+                      {isArchived ? "Archived" : "Archive"}
+                    </span>
+                  </button>
+
+                  <button
+                    onClick={handleDeleteList}
+                    className="flex flex-col items-center gap-1 p-2 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors min-w-[60px]"
+                  >
+                    <Trash2 className="h-5 w-5" />
+                    <span className="text-[10px] font-medium">Delete</span>
+                  </button>
+                </div>
+
+                {/* Add Item Form */}
+                <div className="space-y-3">
+                  <div className="flex space-x-2">
+                    <Input
+                      placeholder="Add item..."
+                      value={newItemName}
+                      onChange={(e) => setNewItemName(e.target.value)}
+                      onKeyPress={handleKeyPress}
+                      className="flex-1"
+                    />
+                    <Input
+                      type="number"
+                      min="1"
+                      max="99"
+                      value={newItemQuantity}
+                      onChange={(e) => setNewItemQuantity(e.target.value)}
+                      className="w-16"
+                    />
+                    <Select
+                      value={newItemCategory}
+                      onValueChange={setNewItemCategory}
+                    >
+                      <SelectTrigger className="w-28">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {categories.map((category) => (
+                          <SelectItem key={category} value={category}>
+                            {category}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <Button
+                    onClick={handleAddItem}
+                    className="w-full"
+                    disabled={!newItemName.trim() || isAddingItem}
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    {isAddingItem ? "Adding..." : "Add Item"}
+                  </Button>
+                </div>
+
+                {/* Progress */}
+                <div className="mt-4 space-y-2">
+                  <Progress value={progressPercentage} className="h-2" />
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-success font-medium">
+                      {progressPercentage}% complete
+                    </span>
+                    {completedItems > 0 && (
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => handleRemoveItem(itemKey)}
-                        className="p-1 h-8 w-8 text-muted-foreground hover:text-destructive"
+                        onClick={handleClearCompleted}
+                        className="text-muted-foreground hover:text-foreground"
                       >
-                        <X className="h-4 w-4" />
+                        Clear completed
                       </Button>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          ))}
-
-          {items.length === 0 && (
-            <div className="text-center py-12">
-              <div className="mb-4">
-                <div className="mx-auto w-12 h-12 bg-muted rounded-full flex items-center justify-center">
-                  <Plus className="h-6 w-6 text-muted-foreground" />
+                    )}
+                  </div>
                 </div>
               </div>
-              <p className="text-foreground font-medium mb-1">
-                Your list is empty
-              </p>
-              <p className="text-sm text-muted-foreground">
-                Add some items to get started!
-              </p>
             </div>
-          )}
-        </div>
+
+            {/* Items List */}
+            <div className="p-4 space-y-6">
+              {Object.entries(groupedItems).map(([category, categoryItems]) => (
+                <div key={category}>
+                  <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wide mb-3">
+                    {category}
+                  </h2>
+                  <div className="space-y-2">
+                    {categoryItems.map((item, index) => {
+                      // Use index as key for new lists, id for existing
+                      const itemKey = isNewList ? index.toString() : item.id;
+
+                      return (
+                        <div
+                          key={itemKey}
+                          className="flex items-center space-x-3 p-3 rounded-lg border border-border bg-card hover:bg-accent/50 transition-colors"
+                        >
+                          <button
+                            onClick={() =>
+                              handleToggleItem(itemKey, item.is_completed)
+                            }
+                            className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
+                              item.is_completed
+                                ? "bg-success border-success"
+                                : "border-muted-foreground hover:border-success"
+                            }`}
+                          >
+                            {item.is_completed && (
+                              <svg
+                                className="w-3 h-3 text-success-foreground"
+                                fill="currentColor"
+                                viewBox="0 0 20 20"
+                              >
+                                <path
+                                  fillRule="evenodd"
+                                  d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                  clipRule="evenodd"
+                                />
+                              </svg>
+                            )}
+                          </button>
+
+                          <div className="flex-1">
+                            <span
+                              className={`font-medium ${
+                                item.is_completed
+                                  ? "line-through text-muted-foreground"
+                                  : "text-foreground"
+                              }`}
+                            >
+                              {item.name}
+                            </span>
+                          </div>
+
+                          <span className="text-sm text-muted-foreground min-w-[20px] text-center">
+                            {item.quantity}
+                          </span>
+
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleRemoveItem(itemKey)}
+                            className="p-1 h-8 w-8 text-muted-foreground hover:text-destructive"
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+
+              {items.length === 0 && (
+                <div className="text-center py-12">
+                  <div className="mb-4">
+                    <div className="mx-auto w-12 h-12 bg-muted rounded-full flex items-center justify-center">
+                      <Plus className="h-6 w-6 text-muted-foreground" />
+                    </div>
+                  </div>
+                  <p className="text-foreground font-medium mb-1">
+                    Your list is empty
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    Add some items to get started!
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        </PullToRefresh>
       </div>
     </div>
   );

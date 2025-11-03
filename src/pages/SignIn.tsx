@@ -19,23 +19,23 @@ const SignIn = () => {
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
-      const {data, error} = await login({ email, password });
-      if (error){
-          console.log("Error with Login", error);
-          toast({
-              title: "Unknown error",
-              description: "Please try again later.",
-          });
-          return;
-      }
-      if (data){
-          console.log('Signin response', data, error);
-          toast({
-              title: "Welcome back!",
-              description: "You've been signed in successfully.",
-          });
-          navigate("/lists");
-      }
+    const { data, error } = await login({ email, password });
+    if (error) {
+      console.log("Error with Login", error);
+      toast({
+        title: "Unknown error",
+        description: "Please try again later.",
+      });
+      return;
+    }
+    if (data) {
+      console.log("Signin response", data, error);
+      toast({
+        title: "Welcome back!",
+        description: "You've been signed in successfully.",
+      });
+      navigate("/lists");
+    }
   };
 
   const handleSocialLogin = (provider: string) => {
