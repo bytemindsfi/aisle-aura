@@ -19,7 +19,8 @@
     "update-android": "npx cap update android",
     "open-xcode": "npx cap open ios",
     "add-ios": "npx cap add ios",
-    "add-android": "npx cap add android"
+    "add-android": "npx cap add android",
+    "assets": "npx @capacitor/assets generate"
   },
   "dependencies": {
     "@capacitor/android": "^7.4.3",
