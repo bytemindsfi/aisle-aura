@@ -64,6 +64,7 @@ const supabaseBaseQuery = async ({
 
     return { data };
   } catch (e: any) {
+      console.log('ERROR FETCHING', e.message);
     return { error: { status: "FETCH_ERROR", error: e.message } };
   }
 };

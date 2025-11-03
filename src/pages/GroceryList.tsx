@@ -10,7 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ArrowLeft, X, Plus, Delete } from "lucide-react";
+import {ArrowLeft, X, Plus, Pin, Share, Trash2} from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import {
   useAddNewListMutation,
@@ -69,7 +69,7 @@ const GroceryList = () => {
   }, [list, isNewList]);
 
   // Handle loading and error states
-  if (isLoading) return <Spinner />;
+  if (isLoading) return <Spinner fullscreen={true}/>;
 
   if (error && !isNewList) {
     return (
@@ -319,8 +319,8 @@ const GroceryList = () => {
         {/* Header */}
         <div className="sticky top-0 bg-background border-b border-border z-10">
           <div className="p-4">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center space-x-3">
+            <div className="w-full grid grid-cols-[20%_auto_30%] items-center justify-between mb-4">
+              <div className="flex items-center space-x-2">
                 <Button
                   variant="ghost"
                   size="sm"
@@ -342,6 +342,34 @@ const GroceryList = () => {
                   <p className="text-sm text-muted-foreground">
                     {totalItems} items • {completedItems} completed
                   </p>
+                </div>
+                <div className="flex items-center space-x-4">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleSave}
+                    className="p-0 h-fit w-fit"
+                    disabled={isCreating}
+                  >
+                    <Pin className={`h-24 w-24 fill-current ${list.isPinned === true ? 'text-warning' : 'text-gray-500'}`} />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleSave}
+                    className="p-0 h-fit w-fit"
+                    disabled={isCreating}
+                  >
+                    <Share className="h-24 w-24 fill-current text-gray-500" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleDeleteList}
+                    className="p-0 h-fit w-fit"
+                  >
+                    <Trash2 className="h-24 w-24 fill-current text-red-600"/>
+                  </Button>
                 </div>
               </div>
             </div>
@@ -501,18 +529,6 @@ const GroceryList = () => {
               </p>
             </div>
           )}
-          {
-            <div className="text-center py-12">
-              <Button
-                onClick={handleDeleteList}
-                className="w-full bg-red-600"
-                /*disabled={!newItemName.trim() || isAddingItem}*/
-              >
-                <Delete className="h-4 w-4 mr-2" />
-                {isAddingItem ? "Deleting..." : "Delete list"}
-              </Button>
-            </div>
-          }
         </div>
       </div>
     </div>

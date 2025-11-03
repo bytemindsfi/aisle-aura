@@ -2,7 +2,7 @@ import { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
   appId: 'com.byteminds.aisleAura',
-  appName: 'Aisle-aura',
+  appName: 'AisleAura',
   webDir: 'dist'
   /*server: {
     url: "http://192.168.101.108:8080",
