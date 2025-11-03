@@ -3,17 +3,23 @@ import { UserCircle, LogOutIcon } from "lucide-react";
 import { useLogoutMutation } from "@/redux/aisle-aura.ts";
 import { useAuth } from "@/hooks/use-auth.tsx";
 import { useProfile } from "@/hooks/use-profile.ts";
+import {Spinner} from "@/components/ui/Spinner.tsx";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
 }
 
 const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
-  const isAuthenticated = localStorage.getItem("isAuthenticated") === "true";
   const [logout] = useLogoutMutation();
-  const { user } = useAuth();
+  const { user, isAuthenticated, loading } = useAuth();
   const { profile } = useProfile(user?.id);
-  if (!isAuthenticated) {
+
+    // Show loading spinner while checking auth state
+    if (loading) {
+        return <Spinner fullscreen />;
+    }
+
+    if (!isAuthenticated) {
     return <Navigate to="/signin" replace />;
   }
 

@@ -23,15 +23,9 @@ export const useAuth = () => {
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
-
-      // Handle session expiry
-      /*if (_event === 'SIGNED_OUT') {
-                // Redirect to login or show notification
-                window.location.href = '/login'
-            }*/
     });
 
     return () => subscription.unsubscribe();
   }, []);
-  return { user, session, loading };
+  return { user, session, loading, isAuthenticated: !!session };
 };

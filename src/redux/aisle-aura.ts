@@ -18,6 +18,31 @@ const supabaseBaseQuery = async ({
   single = false, // For .single()
 }: any) => {
   try {
+      // Step 1: Check for valid session before making request
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+
+      if (sessionError || !session) {
+          return {
+              error: {
+                  status: 'UNAUTHENTICATED',
+                  error: 'No active session. Please sign in again.',
+              },
+          };
+      }
+
+      // Step 2: Check if token is about to expire (optional, but good practice)
+      const expiresAt = session.expires_at;
+      const now = Math.floor(Date.now() / 1000);
+
+      // If token expires in less than 5 minutes, refresh it
+      if (expiresAt && expiresAt - now < 300) {
+          const { error: refreshError } = await supabase.auth.refreshSession();
+          if (refreshError) {
+              console.warn('Token refresh failed:', refreshError);
+              // Don't fail the request, let it try with current token
+          }
+      }
+
     let query: any;
 
     // Handle different methods
@@ -65,6 +90,15 @@ const supabaseBaseQuery = async ({
     return { data };
   } catch (e: any) {
       console.log('ERROR FETCHING', e.message);
+      // Check if it's a network error or auth error
+      if (e.message?.includes('JWT') || e.message?.includes('auth')) {
+          return {
+              error: {
+                  status: 'UNAUTHENTICATED',
+                  error: 'Authentication error. Please sign in again.',
+              },
+          };
+      }
     return { error: { status: "FETCH_ERROR", error: e.message } };
   }
 };
@@ -94,7 +128,7 @@ export const aisleAuraApi = createApi({
             if (userRegError) throw new Error(userRegError.message);
             return { data: registeredUser };
           } catch (e) {
-            return e.message;
+            return {error: e.message};
           }
         },
         invalidatesTags: ["user"],
@@ -112,7 +146,7 @@ export const aisleAuraApi = createApi({
             }
             return { data };
           } catch (e) {
-            return e.message;
+            return {error: e.message};
           }
         },
         invalidatesTags: ["user"],
@@ -122,7 +156,6 @@ export const aisleAuraApi = createApi({
           try {
             const { error } = await supabase.auth.signOut();
             if (error) throw new Error(error.message);
-            localStorage.setItem("isAuthenticated", undefined);
             return { data: "OK" };
           } catch (e) {
             return e.message;

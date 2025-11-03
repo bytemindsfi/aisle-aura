@@ -19,23 +19,23 @@ const SignIn = () => {
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
-    //TODO: do I really need this try catch thingy here? and in signup?
-    try {
-      await login({ email, password });
-      // Simulate sign in
-      localStorage.setItem("isAuthenticated", "true");
-      toast({
-        title: "Welcome back!",
-        description: "You've been signed in successfully.",
-      });
-      navigate("/lists");
-    } catch (e) {
-      console.log("Error with Login", e.message);
-      toast({
-        title: "Unknown error",
-        description: "Please try again later.",
-      });
-    }
+      const {data, error} = await login({ email, password });
+      if (error){
+          console.log("Error with Login", error);
+          toast({
+              title: "Unknown error",
+              description: "Please try again later.",
+          });
+          return;
+      }
+      if (data){
+          console.log('Signin response', data, error);
+          toast({
+              title: "Welcome back!",
+              description: "You've been signed in successfully.",
+          });
+          navigate("/lists");
+      }
   };
 
   const handleSocialLogin = (provider: string) => {

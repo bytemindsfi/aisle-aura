@@ -45,22 +45,22 @@ const SignUp = () => {
       });
       return;
     }
-    try {
-      await register({ email, password, firstName, lastName, agreeToTerms });
-      // Simulate sign up
-      localStorage.setItem("isAuthenticated", "true");
-      toast({
-        title: "Welcome!",
-        description: "Your account has been created successfully.",
-      });
-      navigate("/lists");
-    } catch (e) {
-      console.log("Error with registreation", e.message);
-      toast({
-        title: "Unknown error",
-        description: "Please try again later.",
-      });
-    }
+      const {data, error} = await register({ email, password, firstName, lastName, agreeToTerms });
+      if (error){
+          console.log("Error with registration", error);
+          toast({
+              title: "Unknown error",
+              description: "Please try again later.",
+          });
+          return;
+      }
+      if (data){
+          toast({
+              title: "Welcome!",
+              description: "Your account has been created successfully.",
+          });
+          navigate("/lists");
+      }
   };
 
   const handleSocialLogin = (provider: string) => {
