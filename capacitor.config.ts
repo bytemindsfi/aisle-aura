@@ -3,13 +3,15 @@ import { CapacitorConfig } from '@capacitor/cli';
 const config: CapacitorConfig = {
   appId: 'com.byteminds.aisleAura',
   appName: 'AisleAura',
-  webDir: 'dist'
-  /*server: {
-    url: "http://192.168.101.108:8080",
-    cleartext: true
-  }*/,
+  webDir: 'dist',
+  server: {
+      androidScheme: 'https',
+  },
     ios: {
         contentInset: 'automatic' // Handles safe areas automatically
+    },
+    android: {
+        allowMixedContent: false,
     },
   plugins: {
     SplashScreen: {

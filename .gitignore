@@ -30,3 +30,5 @@ pnpm-workspace.yaml
 pnpm-lock.yaml
 .env
 .env
+
+package-lock.json
