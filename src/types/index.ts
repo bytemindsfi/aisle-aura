@@ -62,3 +62,24 @@ export interface ListDetail {
 export interface NewListInput extends List {
   items: ListItem[];
 }
+
+export interface IListMember {
+    id: string;
+    list_id: string;
+    email: string;
+    user_id: string | null; // null if user hasn't joined yet
+    invited_by_user_id: string;
+    status: 'pending' | 'active';
+    invitation_token: string | null;
+    created_at: string;
+    updated_at: string;
+}
+
+export interface IShareListRequest {
+    list_id: string;
+    emails: string[]; // Just email addresses
+}
+
+export interface IAcceptInvitationRequest {
+    invitation_token: string;
+}

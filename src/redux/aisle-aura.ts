@@ -1,12 +1,14 @@
 import { createApi } from "@reduxjs/toolkit/query/react";
 import {
-  ILoginUser,
-  INewUser,
-  List,
-  ListWithStats,
-  NewListInput,
+    IListMember,
+    ILoginUser,
+    INewUser,
+    List,
+    ListWithStats,
+    NewListInput,
 } from "@/types";
 import supabase from "@/lib/supabase.ts";
+import {generateToken} from "@/lib/utils.ts";
 
 const supabaseBaseQuery = async ({
   table,
@@ -108,7 +110,7 @@ const supabaseBaseQuery = async ({
 
 export const aisleAuraApi = createApi({
   reducerPath: "aisleAuraApi",
-  tagTypes: ["user", "list", "listDetail"],
+  tagTypes: ["user", "list", "listDetail", "listmember"],
   baseQuery: supabaseBaseQuery,
   endpoints: (builder) => {
     return {
@@ -411,6 +413,99 @@ export const aisleAuraApi = createApi({
         },
         invalidatesTags: ["list"], // Refetch all lists after deletion
       }),
+        getListMembers: builder.query<IListMember[], string>({
+            queryFn: async (listId: string) => {
+                try {
+                    const { data, error } = await supabase
+                        .from('list_members')
+                        .select('*')
+                        .eq('list_id', listId)
+                        .order('created_at', { ascending: false });
+
+                    if (error) throw error;
+                    return { data: data || [] };
+                } catch (e: any) {
+                    return { error: e.message };
+                }
+            },
+            providesTags: ["listmember"],
+        }),
+        addListMembers: builder.mutation <void, { listId: string; emails: string[] }>({
+          queryFn: async ({ listId, emails }) => {
+              try {
+                  const { data: { user } } = await supabase.auth.getUser();
+                  if (!user) throw new Error('Not authenticated');
+
+                  // Check each email - if user exists, add as active, else pending with token
+                  const membersToAdd = await Promise.all(
+                      emails.map(async (email) => {
+                          // Check if user exists
+                          const { data: existingUser } = await supabase
+                              .from('profiles')
+                              .select('id')
+                              .eq('email', email)
+                              .single();
+
+                          return {
+                              list_id: listId,
+                              email: email.toLowerCase().trim(),
+                              user_id: existingUser?.id || null,
+                              invited_by_user_id: user.id,
+                              status: existingUser ? 'active' : 'pending',
+                              invitation_token: existingUser ? null : generateToken(),
+                          };
+                      })
+                  );
+
+                  const { error } = await supabase
+                      .from('list_members')
+                      .insert(membersToAdd);
+
+                  if (error) throw error;
+
+                  // TODO: Send email invitations for pending members
+                  // You can implement this later with a backend function
+
+                  return { data: undefined };
+              } catch (e: any) {
+                  return { error: e.message };
+              }
+          },
+          invalidatesTags: ["listmember"],
+      }),
+        removeListMember: builder.mutation<void, string>({
+            queryFn: async (memberId: string) => {
+                try {
+                    const { error } = await supabase
+                        .from('list_members')
+                        .delete()
+                        .eq('id', memberId);
+
+                    if (error) throw error;
+                    return { data: undefined };
+                } catch (e: any) {
+                    return { error: e.message };
+                }
+            },
+            invalidatesTags: ["listmember"],
+        }),
+        acceptInvitation: builder.mutation<{ list_id: string }, string>({
+            queryFn: async (invitationToken: string) => {
+                try {
+                    const { data, error } = await supabase.rpc('accept_invitation', {
+                        p_invitation_token: invitationToken,
+                    });
+
+                    if (error) throw error;
+                    if (!data.success) throw new Error(data.error);
+
+                    return { data: { list_id: data.list_id } };
+                } catch (e: any) {
+                    return { error: e.message };
+                }
+            },
+            invalidatesTags: ['list', 'listmember'],
+        }),
     };
   },
 });
@@ -427,6 +522,10 @@ export const {
   useDeleteListItemMutation,
   useUpdateListNameMutation,
   useDeleteListMutation,
+    useGetListMembersQuery,
+    useAddListMembersMutation,
+    useRemoveListMemberMutation,
+    useAcceptInvitationMutation
 } = aisleAuraApi;
 
 export const { endpoints, reducerPath, reducer, middleware } = aisleAuraApi;

@@ -34,6 +34,7 @@ import { ListItem, NewListInput } from "@/types";
 import { Spinner } from "@/components/ui/Spinner.tsx";
 import { cn } from "@/lib/utils.ts";
 import PullToRefresh from "react-simple-pull-to-refresh";
+import ShareList from "@/components/ShareList.tsx";
 
 const GroceryList = () => {
   const { id } = useParams();
@@ -73,6 +74,7 @@ const GroceryList = () => {
 
   const [isPinned, setIsPinned] = useState(list ? list.is_pinned : false);
   const [isArchived, setIsArchived] = useState(false);
+    const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
 
   console.log("Here", localItems);
 
@@ -331,7 +333,7 @@ const GroceryList = () => {
   const handlePin = () => setIsPinned(!isPinned);
   const handleArchive = () => setIsArchived(!isArchived);
   const handleShare = () => {
-    // Share logic
+      setIsShareDialogOpen(true);
   };
 
   // Pull to refresh handler
@@ -342,14 +344,6 @@ const GroceryList = () => {
   return (
     <div className="min-h-screen bg-background">
       <div className="max-w-md mx-auto">
-        <PullToRefresh
-          onRefresh={handleRefresh}
-          pullingContent=""
-          refreshingContent={<Spinner />}
-          pullDownThreshold={80}
-          maxPullDownDistance={100}
-          resistance={2}
-        >
           <div>
             {/* Header */}
             <div className="sticky top-0 bg-background border-b border-border z-10">
@@ -587,9 +581,17 @@ const GroceryList = () => {
                   </p>
                 </div>
               )}
+
+                {!isNewList && (
+                    <ShareList
+                        listId={id!}
+                        listName={listName}
+                        isOpen={isShareDialogOpen}
+                        onClose={() => setIsShareDialogOpen(false)}
+                    />
+                )}
             </div>
           </div>
-        </PullToRefresh>
       </div>
     </div>
   );
