@@ -1,9 +1,11 @@
+import { useState } from "react";
 import { Navigate } from "react-router-dom";
 import { UserCircle, LogOutIcon } from "lucide-react";
 import { useLogoutMutation } from "@/redux/aisle-aura.ts";
 import { useAuth } from "@/hooks/use-auth.tsx";
 import { useProfile } from "@/hooks/use-profile.ts";
 import { Spinner } from "@/components/ui/Spinner.tsx";
+import Profile from "@/components/Profile.tsx";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -13,6 +15,7 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   const [logout] = useLogoutMutation();
   const { user, isAuthenticated, loading } = useAuth();
   const { profile } = useProfile(user?.id);
+  const [isProfileDialogOpen, setIsProfileDialogOpen] = useState(false);
 
   // Show loading spinner while checking auth state
   if (loading) {
@@ -26,23 +29,26 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   return (
     <>
       <div
-        className="h-fit max-w-md mx-auto flex justify-between px-4"
+        className="h-fit max-w-md mx-auto flex justify-end px-4"
         style={{
           paddingTop: "max(1rem, env(safe-area-inset-top))",
         }}
       >
-        <div className="w-fit text-muted-foreground flex gap-1">
+        <div
+          className="w-fit text-muted-foreground flex gap-1"
+          onClick={() => setIsProfileDialogOpen(!isProfileDialogOpen)}
+        >
           <UserCircle className="h-6 w-6" />
           <p>{profile ? profile.first_name : null}</p>
         </div>
-        <div
-          className="h-fit w-fit bg-muted p-2 rounded-full cursor-pointer"
-          onClick={() => logout({})}
-        >
-          <LogOutIcon className="h-4 w-4 text-muted-foreground" />
-        </div>
       </div>
-      {children}
+      <div>{children}</div>
+      <Profile
+        user={profile}
+        logout={() => logout({})}
+        isOpen={isProfileDialogOpen}
+        onClose={() => setIsProfileDialogOpen(false)}
+      />
     </>
   );
 };
