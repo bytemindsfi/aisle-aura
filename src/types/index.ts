@@ -25,7 +25,7 @@ export interface List {
   name: string;
   is_pinned: boolean;
   is_shared: boolean;
-  status: "active" | "archived" | "deleted" | "completed";
+  status?: "active" | "archived" | "deleted" | "completed";
   created_at?: string;
   updated_at?: string;
 }
@@ -34,8 +34,8 @@ export interface ListItem {
   id?: string;
   list_id?: string;
   name: string;
-  quantity: number; // Add this
-  category: string | null; // Add this
+  quantity: number;
+  category: string | null;
   is_completed: boolean;
   created_at?: string;
   updated_at?: string;
@@ -45,18 +45,11 @@ export interface ListWithStats extends List {
   total_items: number;
   completed_items: number;
   first_items: string[];
+  is_owner: boolean;
 }
 
-export interface ListDetail {
-  id: string;
-  name: string;
-  updatedAt: string;
-  totalItems: number;
-  completedItems: number;
-  isPinned?: boolean;
-  isShared?: boolean;
+export interface ListWithItems extends List {
   list_items: ListItem[];
-  status: "active" | "archived" | "deleted" | "completed";
 }
 
 export interface NewListInput extends List {
@@ -64,22 +57,22 @@ export interface NewListInput extends List {
 }
 
 export interface IListMember {
-    id: string;
-    list_id: string;
-    email: string;
-    user_id: string | null; // null if user hasn't joined yet
-    invited_by_user_id: string;
-    status: 'pending' | 'active';
-    invitation_token: string | null;
-    created_at: string;
-    updated_at: string;
+  id: string;
+  list_id: string;
+  email: string;
+  user_id: string | null; // null if user hasn't joined yet
+  invited_by_user_id: string;
+  status: "pending" | "active";
+  invitation_token: string | null;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface IShareListRequest {
-    list_id: string;
-    emails: string[]; // Just email addresses
+  list_id: string;
+  emails: string[]; // Just email addresses
 }
 
 export interface IAcceptInvitationRequest {
-    invitation_token: string;
+  invitation_token: string;
 }

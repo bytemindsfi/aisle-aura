@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,19 +8,70 @@ import { Progress } from "@/components/ui/progress";
 import { Search, Plus, Pin, Users } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth.tsx";
 import { useProfile } from "@/hooks/use-profile.ts";
-import { useGetListWithStatsQuery } from "@/redux/aisle-aura.ts";
+import {
+  useGetListWithStatsQuery,
+  useGetSharedListsWithStatsQuery,
+} from "@/redux/aisle-aura.ts";
 import { Spinner } from "@/components/ui/Spinner.tsx";
+import supabase from "@/lib/supabase.ts";
+import { useToast } from "@/hooks/use-toast.ts";
 
 const Lists = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("all");
+  const [lists, setLists] = useState([]);
   const { user } = useAuth();
   const { profile } = useProfile(user?.id);
-  const { data: lists, isLoading, isError } = useGetListWithStatsQuery();
-  if (isLoading) return <Spinner fullscreen={true} />;
+  const {
+    data: ownedLists = [],
+    isLoading,
+    isError,
+  } = useGetListWithStatsQuery();
+  const { data: sharedLists = [], isLoading: isLoadingShared } =
+    useGetSharedListsWithStatsQuery();
+  const { toast } = useToast();
+
+  useEffect(() => {
+    const checkPendingInvitations = async () => {
+      const {
+        data: { user },
+        error,
+      } = await supabase.auth.getUser();
+      if (!user) return;
+
+      // Check for pending invitations with this email
+      const { data: invitations, error: invError } = await supabase
+        .from("list_members")
+        .select("id, list_id, email, invitation_token, status, created_at")
+        .eq("email", user.email.toLowerCase())
+        .eq("status", "pending");
+
+      console.log("Invitations", invitations, invError, user);
+
+      if (invitations && invitations.length > 0) {
+        // Show notification
+        toast({
+          title: `You have ${invitations.length} pending invitation(s)!`,
+          description: "Accept them to start collaborating",
+          action: (
+            <Button onClick={() => navigate("/invitations")}>View</Button>
+          ),
+        });
+      }
+    };
+
+    checkPendingInvitations();
+  }, [navigate, toast]);
+
+  useEffect(() => {
+    if (lists.length === 0 && ownedLists && sharedLists)
+      setLists(() => [...ownedLists, ...sharedLists]);
+  }, [ownedLists, sharedLists, lists]);
+
+  if (isLoading || isLoadingShared) return <Spinner fullscreen={true} />;
   if (isError) return <Spinner fullscreen={true} />;
-  console.log("Lists", lists, isLoading, isError);
+
   const tabs = [
     { id: "all", label: "All", count: lists.length },
     {
