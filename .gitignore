@@ -29,7 +29,6 @@ android/
 pnpm-workspace.yaml
 pnpm-lock.yaml
 .env
-.env
 
-package-lock.json
+
 package-lock.json
