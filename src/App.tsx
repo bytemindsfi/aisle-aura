@@ -15,6 +15,7 @@ import SignUp from "./pages/SignUp";
 import Lists from "./pages/Lists";
 import GroceryList from "./pages/GroceryList.tsx";
 import NotFound from "./pages/NotFound";
+import Invitations from "@/pages/Invitations.tsx";
 
 const queryClient = new QueryClient();
 
@@ -42,6 +43,14 @@ const App = () => {
               element={
                 <ProtectedRoute>
                   <GroceryList />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/invitations"
+              element={
+                <ProtectedRoute>
+                  <Invitations />
                 </ProtectedRoute>
               }
             />

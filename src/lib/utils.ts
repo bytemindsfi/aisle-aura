@@ -7,11 +7,11 @@ export function cn(...inputs: ClassValue[]) {
 
 // Helper function to generate token
 export function generateToken(): string {
-    return btoa(
-        Array.from(crypto.getRandomValues(new Uint8Array(32)))
-            .map((b) => String.fromCharCode(b))
-            .join('')
-    );
+  return btoa(
+    Array.from(crypto.getRandomValues(new Uint8Array(32)))
+      .map((b) => String.fromCharCode(b))
+      .join(""),
+  );
 }
 
 export const sample_list_data = [
