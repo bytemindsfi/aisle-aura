@@ -1,4 +1,4 @@
-import {useCallback, useEffect, useState} from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -79,17 +79,17 @@ const GroceryList = () => {
     "Other",
   ];
 
-    const handleUpdateListStatus = useCallback(async (
-        id: string,
-        status: "completed" | "active",
-    ) => {
-        try {
-            await updateListStatus({ listId: id, status }).unwrap();
-            refetch();
-        } catch (err) {
-            console.error('Failed to update list status:', err);
-        }
-    }, [updateListStatus, refetch]);
+  const handleUpdateListStatus = useCallback(
+    async (id: string, status: "completed" | "active") => {
+      try {
+        await updateListStatus({ listId: id, status }).unwrap();
+        refetch();
+      } catch (err) {
+        console.error("Failed to update list status:", err);
+      }
+    },
+    [updateListStatus, refetch],
+  );
 
   useEffect(() => {
     if (list && !isNewList) {
@@ -97,19 +97,19 @@ const GroceryList = () => {
     }
   }, [list, isNewList]);
 
-    useEffect(() => {
-        if (isNewList || !list) return;
+  useEffect(() => {
+    if (isNewList || !list) return;
 
-        const shouldBeCompleted = totalItems > 0 && completedItems === totalItems;
-        const currentStatus = list.status;
+    const shouldBeCompleted = totalItems > 0 && completedItems === totalItems;
+    const currentStatus = list.status;
 
-        // Only update if status needs to change
-        if (shouldBeCompleted && currentStatus !== 'completed') {
-            handleUpdateListStatus(id!, 'completed');
-        } else if (!shouldBeCompleted && currentStatus === 'completed') {
-            handleUpdateListStatus(id!, 'active');
-        }
-    }, [totalItems, completedItems, list, isNewList, id, handleUpdateListStatus]);
+    // Only update if status needs to change
+    if (shouldBeCompleted && currentStatus !== "completed") {
+      handleUpdateListStatus(id!, "completed");
+    } else if (!shouldBeCompleted && currentStatus === "completed") {
+      handleUpdateListStatus(id!, "active");
+    }
+  }, [totalItems, completedItems, list, isNewList, id, handleUpdateListStatus]);
 
   // Handle loading and error states
   if (isLoading) return <Spinner fullscreen={true} />;
@@ -400,8 +400,6 @@ const GroceryList = () => {
   const handleShare = () => {
     setIsShareDialogOpen(true);
   };
-
-  console.log("List ", list);
 
   return (
     <div className="min-h-screen bg-background">

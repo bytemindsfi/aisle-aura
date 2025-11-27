@@ -47,8 +47,6 @@ const Lists = () => {
         .eq("email", user.email.toLowerCase())
         .eq("status", "pending");
 
-      console.log("Invitations", invitations, invError, user);
-
       if (invitations && invitations.length > 0) {
         // Show notification
         toast({
@@ -213,7 +211,7 @@ const Lists = () => {
                     {list.first_items.map((item, index) => (
                       <>
                         <div
-                          key={index}
+                          key={index - item}
                           className="flex items-center space-x-2"
                         >
                           <div

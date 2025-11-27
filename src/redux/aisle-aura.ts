@@ -258,6 +258,7 @@ export const aisleAuraApi = createApi({
           });
 
           if (listResult.error) {
+            console.error("List creation error:", listResult.error);
             return listResult; // Return error if list creation failed
           }
 
@@ -267,7 +268,10 @@ export const aisleAuraApi = createApi({
           if (newList.items && newList.items.length > 0) {
             const itemsToInsert = newList.items.map((item) => ({
               list_id: createdList.id,
-              ...item,
+              name: item.name,
+              quantity: item.quantity,
+              category: item.category,
+              is_completed: false,
             }));
 
             const itemsResult = await supabaseBaseQuery({
@@ -277,8 +281,8 @@ export const aisleAuraApi = createApi({
             });
 
             if (itemsResult.error) {
+              console.error("Items creation error:", itemsResult.error);
               // Items failed to insert, but list was created
-              // You might want to delete the list here or return partial success
               return {
                 error: {
                   status: "PARTIAL_ERROR",
