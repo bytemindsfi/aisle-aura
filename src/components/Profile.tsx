@@ -8,6 +8,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Spinner } from "@/components/ui/Spinner.tsx";
+import { Link } from "react-router-dom";
 
 interface ProfileProps {
   user: any;
@@ -53,9 +54,23 @@ const Profile = ({ user, isOpen, logout, onClose }: ProfileProps) => {
             </p>
           </div>
         </div>
+        <div className="py-4 rounded-lg">
+          <Link
+            to="https://buymeacoffee.com/byteminds"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-2 py-2 text-md text-gray-700 hover:bg-gray-100"
+          >
+            ☕ Buy us a coffee
+          </Link>
+        </div>
         <div className="flex justify-end">
-          <Button variant="outline" onClick={logout}>
-            <LogOutIcon className="h-4 w-4 text-muted-foreground" /> Logout
+          <Button
+            variant="secondary"
+            onClick={logout}
+            className="bg-red-500 text-white hover:bg-red-450"
+          >
+            <LogOutIcon className="h-4 w-4 text-white" /> Logout
           </Button>
         </div>
       </DialogContent>
