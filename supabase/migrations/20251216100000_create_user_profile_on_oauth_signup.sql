@@ -21,30 +21,32 @@ BEGIN
         user_name_parts := string_to_array(NEW.raw_user_meta_data->>'name', ' ');
         first_name_val := user_name_parts[1];
         last_name_val := COALESCE(array_to_string(user_name_parts[2:array_length(user_name_parts, 1)], ' '), '');
+    ELSIF NEW.raw_user_meta_data->>'firstName' IS NOT NULL THEN
+        -- Check for firstName/lastName fields (email/password signup)
+        first_name_val := NEW.raw_user_meta_data->>'firstName';
+        last_name_val := COALESCE(NEW.raw_user_meta_data->>'lastName', '');
     ELSE
         -- Default to email username if no name provided
         first_name_val := split_part(NEW.email, '@', 1);
         last_name_val := '';
     END IF;
 
-    -- Insert into users table
+    -- Insert into users table (matching the actual schema without phone column)
     INSERT INTO public.users (
         id,
         first_name,
         last_name,
         email,
-        phone,
         agree_to_terms,
         created_at,
         updated_at
     )
     VALUES (
-        NEW.id::text,
+        NEW.id,
         COALESCE(first_name_val, 'User'),
         COALESCE(last_name_val, ''),
         NEW.email,
-        NEW.phone,
-        true, -- OAuth users implicitly agree to terms by signing up
+        COALESCE((NEW.raw_user_meta_data->>'agreeToTerms')::boolean, true), -- OAuth users implicitly agree
         NOW(),
         NOW()
     )

@@ -10,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useRegisterMutation } from "@/redux/aisle-aura.ts";
 import supabase from "@/lib/supabase";
 import { Capacitor } from '@capacitor/core';
+import { Browser } from '@capacitor/browser';
 
 const SignUp = () => {
   const [firstName, setFirstName] = useState("");
@@ -92,6 +93,7 @@ const SignUp = () => {
   const handleAppleSignUp = async () => {
     try {
       setIsLoading(true);
+      console.log('[Apple Sign Up] Starting...');
 
       // Check if user is already signed in
       const { data: { session } } = await supabase.auth.getSession();
@@ -102,8 +104,11 @@ const SignUp = () => {
         ? 'com.byteminds.aisleaura://lists'  // Deep link for mobile
         : `${window.location.origin}/lists`; // Web URL for browser
 
+      console.log('[Apple Sign Up] Platform:', isNative ? 'Native' : 'Web', 'Redirect:', redirectTo);
+
       // If user is already signed in, link the Apple identity
       if (session?.user) {
+        console.log('[Apple Sign Up] User already signed in, linking identity');
         const { error: linkError } = await supabase.auth.linkIdentity({
           provider: 'apple',
           options: {
@@ -113,6 +118,7 @@ const SignUp = () => {
         });
 
         if (linkError) {
+          console.error('[Apple Sign Up] Link error:', linkError);
           // Check if it's an "identity already exists" error
           if (linkError.message.includes('Identity is already linked')) {
             toast({
@@ -132,23 +138,24 @@ const SignUp = () => {
             description: "Apple Sign In linked to your account!",
           });
         }
+        setIsLoading(false);
         return;
       }
 
       // Otherwise, sign up with Apple
-      const { error } = await supabase.auth.signInWithOAuth({
+      console.log('[Apple Sign Up] Initiating OAuth flow...');
+      const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'apple',
         options: {
           redirectTo,
           skipBrowserRedirect: isNative,
-          queryParams: {
-            access_type: 'offline',
-            prompt: 'consent',
-          },
         },
       });
 
+      console.log('[Apple Sign Up] OAuth response:', { data, error });
+
       if (error) {
+        console.error('[Apple Sign Up] OAuth error:', error);
         // Handle "User already registered" error
         if (error.message.includes('already registered') || error.message.includes('already exists')) {
           toast({
@@ -163,14 +170,28 @@ const SignUp = () => {
             variant: "destructive",
           });
         }
+        setIsLoading(false);
+        return;
       }
+
+      // On native platforms, open the OAuth URL in the in-app browser
+      if (isNative && data?.url) {
+        console.log('[Apple Sign Up] Opening browser with URL:', data.url);
+        await Browser.open({
+          url: data.url,
+          windowName: '_self'
+        });
+        setIsLoading(false);
+      }
+      // On web, the redirect happens automatically
+
     } catch (error: any) {
+      console.error('[Apple Sign Up] Exception:', error);
       toast({
         title: "Error",
         description: error.message || "Failed to sign up with Apple",
         variant: "destructive",
       });
-    } finally {
       setIsLoading(false);
     }
   };
