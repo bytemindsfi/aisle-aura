@@ -170,6 +170,21 @@ export const aisleAuraApi = createApi({
         },
         invalidatesTags: ["user"],
       }),
+      deleteAccount: builder.mutation({
+        queryFn: async () => {
+          try {
+            const { data, error } = await supabase.rpc('delete_user_account');
+            if (error) throw new Error(error.message);
+            if (data && !data.success) {
+              throw new Error(data.error || 'Failed to delete account');
+            }
+            return { data: "Account deleted successfully" };
+          } catch (e: any) {
+            return { error: { status: "CUSTOM_ERROR", error: e.message } };
+          }
+        },
+        invalidatesTags: ["user", "lists"],
+      }),
       getListWithStats: builder.query<ListWithStats[], void>({
         queryFn: async () => {
           const {
@@ -663,6 +678,7 @@ export const {
   useRegisterMutation,
   useLoginMutation,
   useLogoutMutation,
+  useDeleteAccountMutation,
   useGetListWithStatsQuery,
   useAddNewListMutation,
   useGetListByIdQuery,

@@ -50,6 +50,10 @@ All colors MUST be HSL.
     --content-max-width: 425px;
     --list-item-height: 52px;
 
+    /* Tablet and iPad optimizations */
+    --tablet-content-max-width: 896px; /* 2 columns layout */
+    --desktop-content-max-width: 1280px; /* 3 columns layout */
+
     --sidebar-background: 0 0% 98%;
 
     --sidebar-foreground: 240 5.3% 26.1%;

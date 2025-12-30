@@ -49,7 +49,7 @@ const Invitations = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="max-w-md mx-auto">
+      <div className="max-w-md md:max-w-3xl lg:max-w-4xl mx-auto">
         {/* Header */}
         <div
           className="sticky top-0 bg-background border-b border-border z-10"

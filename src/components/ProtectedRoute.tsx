@@ -29,17 +29,17 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   return (
     <>
       <div
-        className="h-fit max-w-md mx-auto flex justify-end px-4"
+        className="h-fit max-w-md md:max-w-4xl lg:max-w-6xl mx-auto flex justify-end px-4"
         style={{
           paddingTop: "max(1rem, env(safe-area-inset-top))",
         }}
       >
         <div
-          className="w-fit text-muted-foreground flex gap-1"
+          className="w-fit text-muted-foreground flex gap-1 items-center cursor-pointer hover:text-foreground transition-colors"
           onClick={() => setIsProfileDialogOpen(!isProfileDialogOpen)}
         >
-          <UserCircle className="h-6 w-6" />
-          <p>{profile ? profile.first_name : null}</p>
+          <UserCircle className="h-6 w-6 md:h-7 md:w-7" />
+          <p className="text-sm md:text-base font-medium">{profile ? profile.first_name : null}</p>
         </div>
       </div>
       <div>{children}</div>

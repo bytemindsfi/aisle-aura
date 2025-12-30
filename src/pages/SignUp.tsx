@@ -8,13 +8,17 @@ import { Separator } from "@/components/ui/separator";
 import AuthLayout from "@/components/AuthLayout";
 import { useToast } from "@/hooks/use-toast";
 import { useRegisterMutation } from "@/redux/aisle-aura.ts";
+import supabase from "@/lib/supabase";
+import { Capacitor } from '@capacitor/core';
 
 const SignUp = () => {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [agreeToTerms, setAgreeToTerms] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
   const [register] = useRegisterMutation();
@@ -45,6 +49,22 @@ const SignUp = () => {
       });
       return;
     }
+    if (password !== confirmPassword) {
+      toast({
+        title: "Password Mismatch",
+        description: "Passwords do not match. Please try again.",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (password.length < 6) {
+      toast({
+        title: "Password Too Short",
+        description: "Password must be at least 6 characters long.",
+        variant: "destructive",
+      });
+      return;
+    }
     const { data, error } = await register({
       email,
       password,
@@ -69,10 +89,96 @@ const SignUp = () => {
     }
   };
 
-  const handleSocialLogin = (provider: string) => {
+  const handleAppleSignUp = async () => {
+    try {
+      setIsLoading(true);
+
+      // Check if user is already signed in
+      const { data: { session } } = await supabase.auth.getSession();
+
+      // Use custom scheme for Capacitor mobile apps, fallback to web URL
+      const isNative = Capacitor.isNativePlatform();
+      const redirectTo = isNative
+        ? 'com.byteminds.aisleaura://lists'  // Deep link for mobile
+        : `${window.location.origin}/lists`; // Web URL for browser
+
+      // If user is already signed in, link the Apple identity
+      if (session?.user) {
+        const { error: linkError } = await supabase.auth.linkIdentity({
+          provider: 'apple',
+          options: {
+            redirectTo,
+            skipBrowserRedirect: isNative,
+          },
+        });
+
+        if (linkError) {
+          // Check if it's an "identity already exists" error
+          if (linkError.message.includes('Identity is already linked')) {
+            toast({
+              title: "Already Linked",
+              description: "This Apple ID is already linked to your account.",
+            });
+          } else {
+            toast({
+              title: "Link Error",
+              description: linkError.message,
+              variant: "destructive",
+            });
+          }
+        } else {
+          toast({
+            title: "Success",
+            description: "Apple Sign In linked to your account!",
+          });
+        }
+        return;
+      }
+
+      // Otherwise, sign up with Apple
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'apple',
+        options: {
+          redirectTo,
+          skipBrowserRedirect: isNative,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          },
+        },
+      });
+
+      if (error) {
+        // Handle "User already registered" error
+        if (error.message.includes('already registered') || error.message.includes('already exists')) {
+          toast({
+            title: "Account Exists",
+            description: "An account with this email already exists. Please sign in with your email and password, then link your Apple ID from your profile.",
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Apple Sign Up Error",
+            description: error.message,
+            variant: "destructive",
+          });
+        }
+      }
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to sign up with Apple",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleGoogleSignUp = async () => {
     toast({
-      title: `${provider} signup`,
-      description: "Social signup would be implemented here.",
+      title: "Google Sign Up",
+      description: "Google signup would be implemented here.",
     });
   };
 
@@ -132,10 +238,24 @@ const SignUp = () => {
             <Input
               id="password"
               type="password"
-              placeholder="Create a password"
+              placeholder="Create a password (min. 6 characters)"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
+              minLength={6}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="confirmPassword">Confirm Password</Label>
+            <Input
+              id="confirmPassword"
+              type="password"
+              placeholder="Confirm your password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              required
+              minLength={6}
             />
           </div>
 
@@ -171,7 +291,8 @@ const SignUp = () => {
           <div className="grid grid-cols-2 gap-3">
             <Button
               variant="outline"
-              onClick={() => handleSocialLogin("Google")}
+              onClick={handleGoogleSignUp}
+              disabled={isLoading}
               className="w-full"
             >
               <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
@@ -196,17 +317,18 @@ const SignUp = () => {
             </Button>
             <Button
               variant="outline"
-              onClick={() => handleSocialLogin("Facebook")}
+              onClick={handleAppleSignUp}
+              disabled={isLoading}
               className="w-full"
             >
               <svg
-                className="mr-2 h-4 w-4 text-[#1877F2]"
+                className="mr-2 h-4 w-4"
                 fill="currentColor"
                 viewBox="0 0 24 24"
               >
-                <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+                <path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09l.01-.01zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z" />
               </svg>
-              Facebook
+              {isLoading ? "Signing up..." : "Apple"}
             </Button>
           </div>
         </div>

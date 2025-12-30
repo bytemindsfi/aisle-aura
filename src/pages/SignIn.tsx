@@ -1,21 +1,59 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
 import AuthLayout from "@/components/AuthLayout";
 import { useToast } from "@/hooks/use-toast";
 import { useLoginMutation } from "@/redux/aisle-aura.ts";
+import supabase from "@/lib/supabase";
+import { Capacitor } from '@capacitor/core';
 
 const SignIn = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [rememberMe, setRememberMe] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
   const [login] = useLoginMutation();
+
+  // Check for OAuth callback on component mount
+  useEffect(() => {
+    const checkOAuthCallback = async () => {
+      // Check if we have URL hash params (OAuth callback)
+      if (window.location.hash) {
+        console.log('[OAuth] Callback detected with hash:', window.location.hash);
+        setIsLoading(true);
+
+        // Give Supabase a moment to process the OAuth callback
+        await new Promise(resolve => setTimeout(resolve, 1000));
+
+        const { data: { session }, error } = await supabase.auth.getSession();
+
+        if (session) {
+          console.log('[OAuth] Session established, user:', session.user.email);
+          toast({
+            title: "Welcome!",
+            description: "You've been signed in successfully with Apple.",
+          });
+          navigate('/lists');
+        } else if (error) {
+          console.error('[OAuth] Error establishing session:', error);
+          toast({
+            title: "Sign In Error",
+            description: error.message,
+            variant: "destructive",
+          });
+          setIsLoading(false);
+        } else {
+          console.warn('[OAuth] No session after callback');
+          setIsLoading(false);
+        }
+      }
+    };
+    checkOAuthCallback();
+  }, [navigate, toast]);
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,10 +76,96 @@ const SignIn = () => {
     }
   };
 
-  const handleSocialLogin = (provider: string) => {
+  const handleAppleSignIn = async () => {
+    try {
+      setIsLoading(true);
+
+      // Check if user is already signed in
+      const { data: { session } } = await supabase.auth.getSession();
+
+      // Use custom scheme for Capacitor mobile apps, fallback to web URL
+      const isNative = Capacitor.isNativePlatform();
+      const redirectTo = isNative
+        ? 'com.byteminds.aisleaura://lists'  // Deep link for mobile
+        : `${window.location.origin}/lists`; // Web URL for browser
+
+      // If user is already signed in, link the Apple identity
+      if (session?.user) {
+        const { error: linkError } = await supabase.auth.linkIdentity({
+          provider: 'apple',
+          options: {
+            redirectTo,
+            skipBrowserRedirect: isNative,
+          },
+        });
+
+        if (linkError) {
+          // Check if it's an "identity already exists" error
+          if (linkError.message.includes('Identity is already linked')) {
+            toast({
+              title: "Already Linked",
+              description: "This Apple ID is already linked to your account.",
+            });
+          } else {
+            toast({
+              title: "Link Error",
+              description: linkError.message,
+              variant: "destructive",
+            });
+          }
+        } else {
+          toast({
+            title: "Success",
+            description: "Apple Sign In linked to your account!",
+          });
+        }
+        return;
+      }
+
+      // Otherwise, sign in with Apple
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'apple',
+        options: {
+          redirectTo,
+          skipBrowserRedirect: isNative,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          },
+        },
+      });
+
+      if (error) {
+        // Handle "User already registered" error
+        if (error.message.includes('already registered') || error.message.includes('already exists')) {
+          toast({
+            title: "Account Exists",
+            description: "An account with this email already exists. Please sign in with your email and password, then link your Apple ID from your profile.",
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Apple Sign In Error",
+            description: error.message,
+            variant: "destructive",
+          });
+        }
+      }
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to sign in with Apple",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
     toast({
-      title: `${provider} login`,
-      description: "Social login would be implemented here.",
+      title: "Google Sign In",
+      description: "Google login would be implemented here.",
     });
   };
 
@@ -85,20 +209,7 @@ const SignIn = () => {
             />
           </div>
 
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="remember"
-                checked={rememberMe}
-                onCheckedChange={(checked) => setRememberMe(checked as boolean)}
-              />
-              <Label
-                htmlFor="remember"
-                className="text-sm text-muted-foreground"
-              >
-                Remember me
-              </Label>
-            </div>
+          <div className="flex items-center justify-end">
             <Link
               to="/forgot-password"
               className="text-sm text-success hover:underline"
@@ -128,7 +239,8 @@ const SignIn = () => {
           <div className="grid grid-cols-2 gap-3">
             <Button
               variant="outline"
-              onClick={() => handleSocialLogin("Google")}
+              onClick={handleGoogleSignIn}
+              disabled={isLoading}
               className="w-full"
             >
               <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
@@ -153,17 +265,18 @@ const SignIn = () => {
             </Button>
             <Button
               variant="outline"
-              onClick={() => handleSocialLogin("Facebook")}
+              onClick={handleAppleSignIn}
+              disabled={isLoading}
               className="w-full"
             >
               <svg
-                className="mr-2 h-4 w-4 text-[#1877F2]"
+                className="mr-2 h-4 w-4"
                 fill="currentColor"
                 viewBox="0 0 24 24"
               >
-                <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+                <path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09l.01-.01zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z" />
               </svg>
-              Facebook
+              {isLoading ? "Signing in..." : "Apple"}
             </Button>
           </div>
         </div>

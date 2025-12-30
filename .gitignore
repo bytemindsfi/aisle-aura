@@ -32,3 +32,8 @@ pnpm-lock.yaml
 
 
 package-lock.json
+
+.claude/
+apple-jwt.txt
+AuthKey_YNT2A66TWB.p8
+generate-apple-jwt.cjs

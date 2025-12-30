@@ -114,22 +114,22 @@ const Lists = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="max-w-md mx-auto">
+      <div className="max-w-md md:max-w-4xl lg:max-w-6xl mx-auto">
         {/* Header */}
         <div className="p-4 space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-foreground">{`${profile ? profile.first_name + "'s" : "My"} Lists`}</h1>
-              <p className="text-sm text-muted-foreground">
+              <h1 className="text-2xl md:text-3xl font-bold text-foreground">{`${profile ? profile.first_name + "'s" : "My"} Lists`}</h1>
+              <p className="text-sm md:text-base text-muted-foreground">
                 {activeLists} active lists • {total_items} total items
               </p>
             </div>
             <Button
               onClick={handleCreateNewList}
               size="sm"
-              className="bg-primary text-primary-foreground"
+              className="bg-primary text-primary-foreground md:text-base md:h-10 md:px-6"
             >
-              <Plus className="h-4 w-4 mr-2" />
+              <Plus className="h-4 w-4 md:h-5 md:w-5 mr-2" />
               New List
             </Button>
           </div>
@@ -171,7 +171,8 @@ const Lists = () => {
         </div>
 
         {/* Lists Grid */}
-        <div className="p-4 space-y-4">
+        <div className="p-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredLists.map((list) => (
             <Card
               key={list.id}
@@ -279,20 +280,6 @@ const Lists = () => {
             </Card>
           ))}
 
-          {filteredLists.length === 0 && (
-            <div className="text-center py-12">
-              <div className="mb-4">
-                <div className="mx-auto w-12 h-12 bg-muted rounded-full flex items-center justify-center">
-                  <Search className="h-6 w-6 text-muted-foreground" />
-                </div>
-              </div>
-              <p className="text-muted-foreground">No lists found</p>
-              <p className="text-sm text-muted-foreground mt-1">
-                Try adjusting your search or filters
-              </p>
-            </div>
-          )}
-
           {/* Create New List Card */}
           <Card
             className="border-2 border-dashed border-muted-foreground/25 cursor-pointer hover:border-muted-foreground/50 transition-colors"
@@ -312,6 +299,21 @@ const Lists = () => {
               </p>
             </CardContent>
           </Card>
+          </div>
+
+          {filteredLists.length === 0 && (
+            <div className="text-center py-12">
+              <div className="mb-4">
+                <div className="mx-auto w-12 h-12 bg-muted rounded-full flex items-center justify-center">
+                  <Search className="h-6 w-6 text-muted-foreground" />
+                </div>
+              </div>
+              <p className="text-muted-foreground">No lists found</p>
+              <p className="text-sm text-muted-foreground mt-1">
+                Try adjusting your search or filters
+              </p>
+            </div>
+          )}
         </div>
       </div>
     </div>
