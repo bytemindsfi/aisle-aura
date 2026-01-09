@@ -85,11 +85,9 @@ const SignIn = () => {
       // Check if user is already signed in
       const { data: { session } } = await supabase.auth.getSession();
 
-      // Use custom scheme for Capacitor mobile apps, fallback to web URL
+      // Use HTTPS URL for both web and mobile - Universal Links will open the app on iOS
       const isNative = Capacitor.isNativePlatform();
-      const redirectTo = isNative
-        ? 'com.byteminds.aisleaura://lists'  // Deep link for mobile (lowercase to match Info.plist)
-        : `${window.location.origin}/lists`; // Web URL for browser
+      const redirectTo = `${window.location.origin}/lists`;
 
       console.log('[Apple Sign In] Platform:', isNative ? 'Native' : 'Web', 'Redirect:', redirectTo);
 
