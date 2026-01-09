@@ -179,7 +179,7 @@ const SignUp = () => {
         console.log('[Apple Sign Up] Opening browser with URL:', data.url);
         await Browser.open({
           url: data.url,
-          windowName: '_self'
+          presentationStyle: 'fullscreen'
         });
         setIsLoading(false);
       }

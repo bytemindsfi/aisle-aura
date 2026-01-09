@@ -88,7 +88,7 @@ const SignIn = () => {
       // Use custom scheme for Capacitor mobile apps, fallback to web URL
       const isNative = Capacitor.isNativePlatform();
       const redirectTo = isNative
-        ? 'com.byteminds.aisleaura://lists'  // Deep link for mobile
+        ? 'com.byteminds.aisleaura://lists'  // Deep link for mobile (lowercase to match Info.plist)
         : `${window.location.origin}/lists`; // Web URL for browser
 
       console.log('[Apple Sign In] Platform:', isNative ? 'Native' : 'Web', 'Redirect:', redirectTo);
@@ -166,7 +166,7 @@ const SignIn = () => {
         console.log('[Apple Sign In] Opening browser with URL:', data.url);
         await Browser.open({
           url: data.url,
-          windowName: '_self'
+          presentationStyle: 'fullscreen'
         });
         setIsLoading(false);
       }
