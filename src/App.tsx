@@ -28,7 +28,9 @@ const AppRoutes = () => {
     if (Capacitor.isNativePlatform()) {
       SocialLogin.initialize({
         apple: {
-          // iOS uses native Apple Sign-In capabilities, no additional config needed
+          // Use Services ID for Supabase compatibility
+          // This must match the client_id configured in your Apple Developer Portal
+          clientId: 'com.byteminds.aisleaura.signin'
         }
       }).then(() => {
         console.log('[App] Social Login plugin initialized');
