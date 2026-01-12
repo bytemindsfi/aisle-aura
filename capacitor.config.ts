@@ -8,7 +8,8 @@ const config: CapacitorConfig = {
       androidScheme: 'https',
   },
     ios: {
-        contentInset: 'automatic' // Handles safe areas automatically
+        contentInset: 'automatic', // Handles safe areas automatically
+        minVersion: '15.0' // Required for @capgo/capacitor-social-login plugin
     },
     android: {
         allowMixedContent: false,

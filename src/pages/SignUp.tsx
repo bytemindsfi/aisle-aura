@@ -110,14 +110,17 @@ const SignUp = () => {
 
         console.log('[Apple Sign Up] Native result:', result);
 
-        if (!result.result?.identityToken) {
+        // The plugin returns 'idToken', not 'identityToken'
+        const idToken = result.result?.idToken;
+
+        if (!idToken) {
           throw new Error('No identity token received from Apple');
         }
 
         // Sign in to Supabase with the identity token
         const { data, error } = await supabase.auth.signInWithIdToken({
           provider: 'apple',
-          token: result.result.identityToken,
+          token: idToken,
         });
 
         if (error) {
