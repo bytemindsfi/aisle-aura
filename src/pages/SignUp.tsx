@@ -10,7 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useRegisterMutation } from "@/redux/aisle-aura.ts";
 import supabase from "@/lib/supabase";
 import { Capacitor } from '@capacitor/core';
-import { Browser } from '@capacitor/browser';
+import { SocialLogin } from '@capgo/capacitor-social-login';
 
 const SignUp = () => {
   const [firstName, setFirstName] = useState("");
@@ -95,84 +95,66 @@ const SignUp = () => {
       setIsLoading(true);
       console.log('[Apple Sign Up] Starting...');
 
-      // Check if user is already signed in
-      const { data: { session } } = await supabase.auth.getSession();
-
-      // For mobile, use custom URL scheme that will trigger appUrlOpen
-      // For web, use the actual origin
       const isNative = Capacitor.isNativePlatform();
-      const redirectTo = isNative
-        ? 'com.byteminds.aisleaura://callback'
-        : `${window.location.origin}/lists`;
 
-      console.log('[Apple Sign Up] Platform:', isNative ? 'Native' : 'Web', 'Redirect:', redirectTo);
+      if (isNative) {
+        // Use native Apple Sign In plugin for mobile
+        console.log('[Apple Sign Up] Using native plugin');
 
-      // If user is already signed in, link the Apple identity
-      if (session?.user) {
-        console.log('[Apple Sign Up] User already signed in, linking identity');
-        const { error: linkError } = await supabase.auth.linkIdentity({
+        const result = await SocialLogin.login({
           provider: 'apple',
           options: {
-            ...(redirectTo && { redirectTo }),
-            skipBrowserRedirect: isNative,
+            scopes: ['email', 'name'],
           },
         });
 
-        if (linkError) {
-          console.error('[Apple Sign Up] Link error:', linkError);
-          // Check if it's an "identity already exists" error
-          if (linkError.message.includes('Identity is already linked')) {
-            toast({
-              title: "Already Linked",
-              description: "This Apple ID is already linked to your account.",
-            });
-          } else {
-            toast({
-              title: "Link Error",
-              description: linkError.message,
-              variant: "destructive",
-            });
-          }
-        } else {
-          toast({
-            title: "Success",
-            description: "Apple Sign In linked to your account!",
-          });
+        console.log('[Apple Sign Up] Native result:', result);
+
+        if (!result.result?.identityToken) {
+          throw new Error('No identity token received from Apple');
         }
-        setIsLoading(false);
-        return;
-      }
 
-      // Otherwise, sign up with Apple
-      console.log('[Apple Sign Up] Initiating OAuth flow...');
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'apple',
-        options: {
-          redirectTo,
-          // Don't skip browser redirect - let it open in system browser (Safari)
-          // This allows the deep link to work properly when OAuth completes
-        },
-      });
-
-      if (error) {
-        console.error('[Apple Sign Up] OAuth error:', error);
-        toast({
-          title: "Apple Sign Up Error",
-          description: error.message,
-          variant: "destructive",
+        // Sign in to Supabase with the identity token
+        const { data, error } = await supabase.auth.signInWithIdToken({
+          provider: 'apple',
+          token: result.result.identityToken,
         });
-        setIsLoading(false);
-        return;
+
+        if (error) {
+          console.error('[Apple Sign Up] Supabase error:', error);
+          throw error;
+        }
+
+        if (data?.session) {
+          console.log('[Apple Sign Up] Session established:', data.session.user?.email);
+          toast({
+            title: "Welcome!",
+            description: "You've been signed up successfully.",
+          });
+          navigate('/lists');
+        }
+      } else {
+        // Use OAuth flow for web
+        console.log('[Apple Sign Up] Using web OAuth flow');
+        const { error } = await supabase.auth.signInWithOAuth({
+          provider: 'apple',
+          options: {
+            redirectTo: `${window.location.origin}/lists`,
+          },
+        });
+
+        if (error) {
+          console.error('[Apple Sign Up] OAuth error:', error);
+          throw error;
+        }
       }
 
-      // For native: OAuth will open in Safari, redirect to custom scheme, trigger appUrlOpen
-      // For web: OAuth will redirect normally to the specified URL
       setIsLoading(false);
 
     } catch (error: any) {
       console.error('[Apple Sign Up] Exception:', error);
       toast({
-        title: "Error",
+        title: "Apple Sign Up Error",
         description: error.message || "Failed to sign up with Apple",
         variant: "destructive",
       });
