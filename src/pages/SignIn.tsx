@@ -85,9 +85,12 @@ const SignIn = () => {
       // Check if user is already signed in
       const { data: { session } } = await supabase.auth.getSession();
 
-      // Use HTTPS URL for both web and mobile - Universal Links will open the app on iOS
+      // For mobile, use custom URL scheme that will trigger appUrlOpen
+      // For web, use the actual origin
       const isNative = Capacitor.isNativePlatform();
-      const redirectTo = `${window.location.origin}/lists`;
+      const redirectTo = isNative
+        ? 'com.byteminds.aisleaura://callback'
+        : `${window.location.origin}/lists`;
 
       console.log('[Apple Sign In] Platform:', isNative ? 'Native' : 'Web', 'Redirect:', redirectTo);
 
@@ -129,46 +132,29 @@ const SignIn = () => {
 
       // Otherwise, sign in with Apple
       console.log('[Apple Sign In] Initiating OAuth flow...');
-      const { data, error } = await supabase.auth.signInWithOAuth({
+      const { error } = await supabase.auth.signInWithOAuth({
         provider: 'apple',
         options: {
           redirectTo,
-          skipBrowserRedirect: isNative,
+          // Don't skip browser redirect - let it open in system browser (Safari)
+          // This allows the deep link to work properly when OAuth completes
         },
       });
 
-      console.log('[Apple Sign In] OAuth response:', { data, error });
-
       if (error) {
         console.error('[Apple Sign In] OAuth error:', error);
-        // Handle "User already registered" error
-        if (error.message.includes('already registered') || error.message.includes('already exists')) {
-          toast({
-            title: "Account Exists",
-            description: "An account with this email already exists. Please sign in with your email and password, then link your Apple ID from your profile.",
-            variant: "destructive",
-          });
-        } else {
-          toast({
-            title: "Apple Sign In Error",
-            description: error.message,
-            variant: "destructive",
-          });
-        }
+        toast({
+          title: "Apple Sign In Error",
+          description: error.message,
+          variant: "destructive",
+        });
         setIsLoading(false);
         return;
       }
 
-      // On native platforms, open the OAuth URL in the in-app browser
-      if (isNative && data?.url) {
-        console.log('[Apple Sign In] Opening browser with URL:', data.url);
-        await Browser.open({
-          url: data.url,
-          presentationStyle: 'fullscreen'
-        });
-        setIsLoading(false);
-      }
-      // On web, the redirect happens automatically
+      // For native: OAuth will open in Safari, redirect to custom scheme, trigger appUrlOpen
+      // For web: OAuth will redirect normally to the specified URL
+      setIsLoading(false);
 
     } catch (error: any) {
       console.error('[Apple Sign In] Exception:', error);
