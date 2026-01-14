@@ -32,10 +32,6 @@ const AppRoutes = () => {
           // This must match the client_id configured in your Apple Developer Portal
           clientId: 'com.byteminds.aisleaura.signin'
         }
-      }).then(() => {
-        console.log('[App] Social Login plugin initialized');
-      }).catch((error) => {
-        console.error('[App] Failed to initialize Social Login:', error);
       });
     }
   }, []);

@@ -19,28 +19,22 @@ const SignIn = () => {
   const { toast } = useToast();
   const [login] = useLoginMutation();
 
-  // Check for OAuth callback on component mount
+  // Check for OAuth callback on component mount (web only)
   useEffect(() => {
     const checkOAuthCallback = async () => {
-      // Check if we have URL hash params (OAuth callback)
       if (window.location.hash) {
-        console.log('[OAuth] Callback detected with hash:', window.location.hash);
         setIsLoading(true);
-
-        // Give Supabase a moment to process the OAuth callback
         await new Promise(resolve => setTimeout(resolve, 1000));
 
         const { data: { session }, error } = await supabase.auth.getSession();
 
         if (session) {
-          console.log('[OAuth] Session established, user:', session.user.email);
           toast({
             title: "Welcome!",
             description: "You've been signed in successfully with Apple.",
           });
           navigate('/lists');
         } else if (error) {
-          console.error('[OAuth] Error establishing session:', error);
           toast({
             title: "Sign In Error",
             description: error.message,
@@ -48,7 +42,6 @@ const SignIn = () => {
           });
           setIsLoading(false);
         } else {
-          console.warn('[OAuth] No session after callback');
           setIsLoading(false);
         }
       }
@@ -60,7 +53,6 @@ const SignIn = () => {
     e.preventDefault();
     const { data, error } = await login({ email, password });
     if (error) {
-      console.log("Error with Login", error);
       toast({
         title: "Unknown error",
         description: "Please try again later.",
@@ -68,7 +60,6 @@ const SignIn = () => {
       return;
     }
     if (data) {
-      console.log("Signin response", data, error);
       toast({
         title: "Welcome back!",
         description: "You've been signed in successfully.",
@@ -80,14 +71,9 @@ const SignIn = () => {
   const handleAppleSignIn = async () => {
     try {
       setIsLoading(true);
-      console.log('[Apple Sign In] Starting...');
-
       const isNative = Capacitor.isNativePlatform();
 
       if (isNative) {
-        // Use native Apple Sign In plugin for mobile
-        console.log('[Apple Sign In] Using native plugin');
-
         const result = await SocialLogin.login({
           provider: 'apple',
           options: {
@@ -95,28 +81,22 @@ const SignIn = () => {
           },
         });
 
-        console.log('[Apple Sign In] Native result:', result);
-
-        // The plugin returns 'idToken', not 'identityToken'
         const idToken = result.result?.idToken;
 
         if (!idToken) {
           throw new Error('No identity token received from Apple');
         }
 
-        // Sign in to Supabase with the identity token
         const { data, error } = await supabase.auth.signInWithIdToken({
           provider: 'apple',
           token: idToken,
         });
 
         if (error) {
-          console.error('[Apple Sign In] Supabase error:', error);
           throw error;
         }
 
         if (data?.session) {
-          console.log('[Apple Sign In] Session established:', data.session.user?.email);
           toast({
             title: "Welcome!",
             description: "You've been signed in successfully.",
@@ -124,8 +104,6 @@ const SignIn = () => {
           navigate('/lists');
         }
       } else {
-        // Use OAuth flow for web
-        console.log('[Apple Sign In] Using web OAuth flow');
         const { error } = await supabase.auth.signInWithOAuth({
           provider: 'apple',
           options: {
@@ -134,7 +112,6 @@ const SignIn = () => {
         });
 
         if (error) {
-          console.error('[Apple Sign In] OAuth error:', error);
           throw error;
         }
       }
@@ -142,7 +119,6 @@ const SignIn = () => {
       setIsLoading(false);
 
     } catch (error: any) {
-      console.error('[Apple Sign In] Exception:', error);
       toast({
         title: "Apple Sign In Error",
         description: error.message || "Failed to sign in with Apple",

@@ -93,14 +93,9 @@ const SignUp = () => {
   const handleAppleSignUp = async () => {
     try {
       setIsLoading(true);
-      console.log('[Apple Sign Up] Starting...');
-
       const isNative = Capacitor.isNativePlatform();
 
       if (isNative) {
-        // Use native Apple Sign In plugin for mobile
-        console.log('[Apple Sign Up] Using native plugin');
-
         const result = await SocialLogin.login({
           provider: 'apple',
           options: {
@@ -108,28 +103,22 @@ const SignUp = () => {
           },
         });
 
-        console.log('[Apple Sign Up] Native result:', result);
-
-        // The plugin returns 'idToken', not 'identityToken'
         const idToken = result.result?.idToken;
 
         if (!idToken) {
           throw new Error('No identity token received from Apple');
         }
 
-        // Sign in to Supabase with the identity token
         const { data, error } = await supabase.auth.signInWithIdToken({
           provider: 'apple',
           token: idToken,
         });
 
         if (error) {
-          console.error('[Apple Sign Up] Supabase error:', error);
           throw error;
         }
 
         if (data?.session) {
-          console.log('[Apple Sign Up] Session established:', data.session.user?.email);
           toast({
             title: "Welcome!",
             description: "You've been signed up successfully.",
@@ -137,8 +126,6 @@ const SignUp = () => {
           navigate('/lists');
         }
       } else {
-        // Use OAuth flow for web
-        console.log('[Apple Sign Up] Using web OAuth flow');
         const { error } = await supabase.auth.signInWithOAuth({
           provider: 'apple',
           options: {
@@ -147,7 +134,6 @@ const SignUp = () => {
         });
 
         if (error) {
-          console.error('[Apple Sign Up] OAuth error:', error);
           throw error;
         }
       }
@@ -155,7 +141,6 @@ const SignUp = () => {
       setIsLoading(false);
 
     } catch (error: any) {
-      console.error('[Apple Sign Up] Exception:', error);
       toast({
         title: "Apple Sign Up Error",
         description: error.message || "Failed to sign up with Apple",
