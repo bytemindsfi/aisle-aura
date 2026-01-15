@@ -8,6 +8,7 @@ import AuthLayout from "@/components/AuthLayout";
 import { useToast } from "@/hooks/use-toast";
 import { useLoginMutation } from "@/redux/aisle-aura.ts";
 import supabase from "@/lib/supabase";
+import { generateNonce, sha256Hash } from "@/lib/utils";
 import { Capacitor } from '@capacitor/core';
 import { SocialLogin } from '@capgo/capacitor-social-login';
 
@@ -134,10 +135,15 @@ const SignIn = () => {
       const isNative = Capacitor.isNativePlatform();
 
       if (isNative) {
+        // Generate nonce and its hash
+        const rawNonce = generateNonce();
+        const nonceDigest = await sha256Hash(rawNonce);
+
         const result = await SocialLogin.login({
           provider: 'google',
           options: {
             scopes: ['email', 'profile'],
+            nonce: nonceDigest, // Pass hashed nonce to Google
           },
         });
 
@@ -150,6 +156,7 @@ const SignIn = () => {
         const { data, error } = await supabase.auth.signInWithIdToken({
           provider: 'google',
           token: idToken,
+          nonce: rawNonce, // Pass raw nonce to Supabase
         });
 
         if (error) {
