@@ -129,10 +129,63 @@ const SignIn = () => {
   };
 
   const handleGoogleSignIn = async () => {
-    toast({
-      title: "Google Sign In",
-      description: "Google login would be implemented here.",
-    });
+    try {
+      setIsLoading(true);
+      const isNative = Capacitor.isNativePlatform();
+
+      if (isNative) {
+        const result = await SocialLogin.login({
+          provider: 'google',
+          options: {
+            scopes: ['email', 'profile'],
+          },
+        });
+
+        const idToken = result.result?.idToken;
+
+        if (!idToken) {
+          throw new Error('No identity token received from Google');
+        }
+
+        const { data, error } = await supabase.auth.signInWithIdToken({
+          provider: 'google',
+          token: idToken,
+        });
+
+        if (error) {
+          throw error;
+        }
+
+        if (data?.session) {
+          toast({
+            title: "Welcome!",
+            description: "You've been signed in successfully.",
+          });
+          navigate('/lists');
+        }
+      } else {
+        const { error } = await supabase.auth.signInWithOAuth({
+          provider: 'google',
+          options: {
+            redirectTo: `${window.location.origin}/lists`,
+          },
+        });
+
+        if (error) {
+          throw error;
+        }
+      }
+
+      setIsLoading(false);
+
+    } catch (error: any) {
+      toast({
+        title: "Google Sign In Error",
+        description: error.message || "Failed to sign in with Google",
+        variant: "destructive",
+      });
+      setIsLoading(false);
+    }
   };
 
   return (
