@@ -134,14 +134,10 @@ const SignIn = () => {
       const isNative = Capacitor.isNativePlatform();
 
       if (isNative) {
-        // Generate a random nonce for security
-        const nonce = Math.random().toString(36).substring(2, 15);
-
         const result = await SocialLogin.login({
           provider: 'google',
           options: {
             scopes: ['email', 'profile'],
-            nonce: nonce,
           },
         });
 
@@ -154,7 +150,6 @@ const SignIn = () => {
         const { data, error } = await supabase.auth.signInWithIdToken({
           provider: 'google',
           token: idToken,
-          nonce: nonce,
         });
 
         if (error) {
