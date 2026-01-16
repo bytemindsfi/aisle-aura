@@ -151,25 +151,19 @@ const SignUp = () => {
     }
   };
 
-  const handleGoogleSignUp = async (retry: boolean = false) => {
+  const handleGoogleSignUp = async () => {
     try {
       setIsLoading(true);
       const isNative = Capacitor.isNativePlatform();
 
       if (isNative) {
-        // Generate nonce and its hash
-        const rawNonce = generateNonce();
-        const nonceDigest = await sha256Hash(rawNonce);
-
-        console.log('Generated rawNonce:', rawNonce);
-        console.log('Generated nonceDigest (hash):', nonceDigest);
-        console.log('Retry attempt:', retry);
-
+        // Note: GoogleSignIn-iOS SDK v8.0.0 (used by @capgo/capacitor-social-login)
+        // does NOT support custom nonce parameter. Nonce support was added in v9.0.0.
+        // Therefore, we skip nonce validation for Google Sign In on iOS.
         const result = await SocialLogin.login({
           provider: 'google',
           options: {
             scopes: ['email', 'profile'],
-            nonce: nonceDigest, // Pass hashed nonce to Google
           },
         });
 
@@ -179,35 +173,10 @@ const SignUp = () => {
           throw new Error('No identity token received from Google');
         }
 
-        // Validate the JWT token nonce before sending to Supabase
-        const validation = validateJWTNonce(idToken, nonceDigest);
-        console.log('JWT validation result:', validation);
-
-        if (!validation.valid) {
-          console.warn('JWT validation failed:', validation.error);
-
-          // If this is the first attempt, logout and retry to get a fresh token
-          if (!retry) {
-            console.log('Logging out from Google and retrying with fresh token...');
-            try {
-              await SocialLogin.logout({ provider: 'google' });
-            } catch (logoutError) {
-              console.error('Error during logout:', logoutError);
-            }
-
-            // Retry once
-            return handleGoogleSignUp(true);
-          } else {
-            // Second attempt also failed, give up
-            throw new Error(validation.error || 'Failed to get valid token from Google');
-          }
-        }
-
-        // Token is valid, proceed with Supabase authentication
+        // Sign in to Supabase WITHOUT nonce (skip nonce check must be enabled in Supabase)
         const { data, error } = await supabase.auth.signInWithIdToken({
           provider: 'google',
           token: idToken,
-          nonce: rawNonce, // Pass raw nonce to Supabase
         });
 
         if (error) {
