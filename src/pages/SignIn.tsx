@@ -139,6 +139,9 @@ const SignIn = () => {
         const rawNonce = generateNonce();
         const nonceDigest = await sha256Hash(rawNonce);
 
+        console.log('Generated rawNonce:', rawNonce);
+        console.log('Generated nonceDigest (hash):', nonceDigest);
+
         const result = await SocialLogin.login({
           provider: 'google',
           options: {
@@ -151,6 +154,16 @@ const SignIn = () => {
 
         if (!idToken) {
           throw new Error('No identity token received from Google');
+        }
+
+        // Decode ID token to see what nonce Google returned
+        const parts = idToken.split('.');
+        if (parts.length === 3) {
+          const payload = JSON.parse(atob(parts[1]));
+          console.log('ID Token payload:', payload);
+          console.log('Nonce in ID token:', payload.nonce);
+          console.log('Expected nonceDigest:', nonceDigest);
+          console.log('Nonces match:', payload.nonce === nonceDigest);
         }
 
         const { data, error } = await supabase.auth.signInWithIdToken({
