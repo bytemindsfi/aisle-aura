@@ -9,7 +9,6 @@ import AuthLayout from "@/components/AuthLayout";
 import { useToast } from "@/hooks/use-toast";
 import { useRegisterMutation } from "@/redux/aisle-aura.ts";
 import supabase from "@/lib/supabase";
-import { generateNonce, sha256Hash, validateJWTNonce } from "@/lib/utils";
 import { Capacitor } from '@capacitor/core';
 import { SocialLogin } from '@capgo/capacitor-social-login';
 

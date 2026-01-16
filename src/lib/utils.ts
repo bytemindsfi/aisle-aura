@@ -14,46 +14,6 @@ export function generateToken(): string {
   );
 }
 
-// Nonce handling for Google Sign In with Supabase
-export function generateNonce(): string {
-  const array = new Uint8Array(32);
-  crypto.getRandomValues(array);
-  return Array.from(array, (byte) => byte.toString(16).padStart(2, '0')).join('');
-}
-
-export async function sha256Hash(message: string): Promise<string> {
-  const encoder = new TextEncoder();
-  const data = encoder.encode(message);
-  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
-}
-
-// Validate JWT token nonce
-export function validateJWTNonce(idToken: string, expectedNonceDigest: string): { valid: boolean; error?: string } {
-  try {
-    const parts = idToken.split('.');
-    if (parts.length !== 3) {
-      return { valid: false, error: 'Invalid JWT format' };
-    }
-
-    const payload = JSON.parse(atob(parts[1]));
-    const tokenNonce = payload.nonce;
-
-    if (!tokenNonce) {
-      return { valid: false, error: 'No nonce in ID token (likely cached token)' };
-    }
-
-    if (tokenNonce !== expectedNonceDigest) {
-      return { valid: false, error: `Nonce mismatch. Expected: ${expectedNonceDigest}, Got: ${tokenNonce}` };
-    }
-
-    return { valid: true };
-  } catch (error) {
-    return { valid: false, error: `Failed to validate JWT: ${error}` };
-  }
-}
-
 export const sample_list_data = [
   {
     id: "1",

@@ -8,7 +8,6 @@ import AuthLayout from "@/components/AuthLayout";
 import { useToast } from "@/hooks/use-toast";
 import { useLoginMutation } from "@/redux/aisle-aura.ts";
 import supabase from "@/lib/supabase";
-import { generateNonce, sha256Hash, validateJWTNonce } from "@/lib/utils";
 import { Capacitor } from '@capacitor/core';
 import { SocialLogin } from '@capgo/capacitor-social-login';
 
@@ -129,7 +128,7 @@ const SignIn = () => {
     }
   };
 
-  const handleGoogleSignIn = async (retry: boolean = false) => {
+  const handleGoogleSignIn = async () => {
     try {
       setIsLoading(true);
       const isNative = Capacitor.isNativePlatform();
