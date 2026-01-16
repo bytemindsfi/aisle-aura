@@ -8,7 +8,7 @@ import AuthLayout from "@/components/AuthLayout";
 import { useToast } from "@/hooks/use-toast";
 import { useLoginMutation } from "@/redux/aisle-aura.ts";
 import supabase from "@/lib/supabase";
-import { generateNonce, sha256Hash } from "@/lib/utils";
+import { generateNonce, sha256Hash, validateJWTNonce } from "@/lib/utils";
 import { Capacitor } from '@capacitor/core';
 import { SocialLogin } from '@capgo/capacitor-social-login';
 
@@ -129,7 +129,7 @@ const SignIn = () => {
     }
   };
 
-  const handleGoogleSignIn = async () => {
+  const handleGoogleSignIn = async (retry: boolean = false) => {
     try {
       setIsLoading(true);
       const isNative = Capacitor.isNativePlatform();
@@ -141,6 +141,7 @@ const SignIn = () => {
 
         console.log('Generated rawNonce:', rawNonce);
         console.log('Generated nonceDigest (hash):', nonceDigest);
+        console.log('Retry attempt:', retry);
 
         const result = await SocialLogin.login({
           provider: 'google',
@@ -156,16 +157,31 @@ const SignIn = () => {
           throw new Error('No identity token received from Google');
         }
 
-        // Decode ID token to see what nonce Google returned
-        const parts = idToken.split('.');
-        if (parts.length === 3) {
-          const payload = JSON.parse(atob(parts[1]));
-          console.log('ID Token payload:', payload);
-          console.log('Nonce in ID token:', payload.nonce);
-          console.log('Expected nonceDigest:', nonceDigest);
-          console.log('Nonces match:', payload.nonce === nonceDigest);
+        // Validate the JWT token nonce before sending to Supabase
+        const validation = validateJWTNonce(idToken, nonceDigest);
+        console.log('JWT validation result:', validation);
+
+        if (!validation.valid) {
+          console.warn('JWT validation failed:', validation.error);
+
+          // If this is the first attempt, logout and retry to get a fresh token
+          if (!retry) {
+            console.log('Logging out from Google and retrying with fresh token...');
+            try {
+              await SocialLogin.logout({ provider: 'google' });
+            } catch (logoutError) {
+              console.error('Error during logout:', logoutError);
+            }
+
+            // Retry once
+            return handleGoogleSignIn(true);
+          } else {
+            // Second attempt also failed, give up
+            throw new Error(validation.error || 'Failed to get valid token from Google');
+          }
         }
 
+        // Token is valid, proceed with Supabase authentication
         const { data, error } = await supabase.auth.signInWithIdToken({
           provider: 'google',
           token: idToken,

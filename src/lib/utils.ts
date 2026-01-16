@@ -29,6 +29,31 @@ export async function sha256Hash(message: string): Promise<string> {
   return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
 }
 
+// Validate JWT token nonce
+export function validateJWTNonce(idToken: string, expectedNonceDigest: string): { valid: boolean; error?: string } {
+  try {
+    const parts = idToken.split('.');
+    if (parts.length !== 3) {
+      return { valid: false, error: 'Invalid JWT format' };
+    }
+
+    const payload = JSON.parse(atob(parts[1]));
+    const tokenNonce = payload.nonce;
+
+    if (!tokenNonce) {
+      return { valid: false, error: 'No nonce in ID token (likely cached token)' };
+    }
+
+    if (tokenNonce !== expectedNonceDigest) {
+      return { valid: false, error: `Nonce mismatch. Expected: ${expectedNonceDigest}, Got: ${tokenNonce}` };
+    }
+
+    return { valid: true };
+  } catch (error) {
+    return { valid: false, error: `Failed to validate JWT: ${error}` };
+  }
+}
+
 export const sample_list_data = [
   {
     id: "1",
