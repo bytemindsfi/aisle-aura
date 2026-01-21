@@ -217,6 +217,7 @@ const SignIn = () => {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
+              data-testid="email-input"
             />
           </div>
 
@@ -229,6 +230,7 @@ const SignIn = () => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
+              data-testid="password-input"
             />
           </div>
 
@@ -244,6 +246,7 @@ const SignIn = () => {
           <Button
             type="submit"
             className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
+            data-testid="signin-button"
           >
             Sign In
           </Button>
@@ -265,6 +268,7 @@ const SignIn = () => {
               onClick={handleGoogleSignIn}
               disabled={isLoading}
               className="w-full"
+              data-testid="google-signin-button"
             >
               <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
                 <path
@@ -291,6 +295,7 @@ const SignIn = () => {
               onClick={handleAppleSignIn}
               disabled={isLoading}
               className="w-full"
+              data-testid="apple-signin-button"
             >
               <svg
                 className="mr-2 h-4 w-4"

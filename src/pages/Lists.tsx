@@ -128,6 +128,7 @@ const Lists = () => {
               onClick={handleCreateNewList}
               size="sm"
               className="bg-primary text-primary-foreground md:text-base md:h-10 md:px-6"
+              data-testid="create-list-button"
             >
               <Plus className="h-4 w-4 md:h-5 md:w-5 mr-2" />
               New List
@@ -142,6 +143,7 @@ const Lists = () => {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-10"
+              data-testid="search-input"
             />
           </div>
 
