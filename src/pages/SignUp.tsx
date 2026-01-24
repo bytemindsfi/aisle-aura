@@ -321,7 +321,7 @@ const SignUp = () => {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className={`grid gap-3 ${isIOS ? 'grid-cols-2' : 'grid-cols-1'}`}>
             <Button
               variant="outline"
               onClick={handleGoogleSignUp}
