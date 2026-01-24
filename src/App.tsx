@@ -34,7 +34,9 @@ const AppRoutes = () => {
         google: {
           // iOS Client ID for native Google Sign In
           iOSClientId: '409704120330-lqar35dgl1vke91186a0c1ncv6eiao55.apps.googleusercontent.com',
-          iOSServerClientId: '409704120330-n6l9vteaie622u0rvmrtq7j1mkcp64jv.apps.googleusercontent.com'
+          iOSServerClientId: '409704120330-n6l9vteaie622u0rvmrtq7j1mkcp64jv.apps.googleusercontent.com',
+          // Android uses the Web Client ID
+          androidClientId: '409704120330-n6l9vteaie622u0rvmrtq7j1mkcp64jv.apps.googleusercontent.com'
         }
       });
     }
